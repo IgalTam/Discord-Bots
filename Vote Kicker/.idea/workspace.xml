@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="52a40b43-e671-41eb-9949-41679ac87856" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Vote Kicker" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="23LwewBkJZUj71oHqjRoRV7BUjF" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Missing Ping Bot" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.vote_kicker_py">
+    <configuration name="bad_alexa" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Vote Kicker" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../Bad_Alexa_Bot" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../Bad_Alexa_Bot/bad_alexa.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="badgrouperpy" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Vote Kicker" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../Bad Grouper" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../Bad Grouper/badgrouperpy.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="hunter_bot" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Vote Kicker" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../Hunter Bot" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../Hunter Bot/hunter_bot.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="vote_kicker_py" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Vote Kicker" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/vote_kicker_py.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.vote_kicker_py" />
+        <item itemvalue="Python.bad_alexa" />
+        <item itemvalue="Python.badgrouperpy" />
+        <item itemvalue="Python.hunter_bot" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="52a40b43-e671-41eb-9949-41679ac87856" name="Default Changelist" comment="" />
+      <created>1641526773194</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1641526773194</updated>
+      <workItem from="1641526774372" duration="4656000" />
+      <workItem from="1641532001584" duration="46000" />
+      <workItem from="1641532184718" duration="399000" />
+      <workItem from="1641539678514" duration="18000" />
+      <workItem from="1641543028555" duration="4169000" />
+      <workItem from="1641611070056" duration="159000" />
+      <workItem from="1641622878898" duration="11000" />
+      <workItem from="1641623563772" duration="1671000" />
+      <workItem from="1641667735660" duration="321000" />
+      <workItem from="1641672521408" duration="463000" />
+      <workItem from="1641677348714" duration="6318000" />
+      <workItem from="1641695482537" duration="1210000" />
+      <workItem from="1641697778546" duration="3187000" />
+      <workItem from="1642055786990" duration="1188000" />
+      <workItem from="1642138995709" duration="315000" />
+      <workItem from="1642143017755" duration="174000" />
+      <workItem from="1642231263779" duration="622000" />
+      <workItem from="1642393999468" duration="797000" />
+      <workItem from="1642620485245" duration="23000" />
+      <workItem from="1642801425599" duration="1424000" />
+      <workItem from="1642806617464" duration="1730000" />
+      <workItem from="1642817016067" duration="16000" />
+      <workItem from="1643436595899" duration="202000" />
+      <workItem from="1643606012550" duration="30000" />
+      <workItem from="1643692855721" duration="600000" />
+      <workItem from="1643697310087" duration="681000" />
+      <workItem from="1643858319534" duration="3443000" />
+      <workItem from="1643867058933" duration="1467000" />
+      <workItem from="1643938425174" duration="70000" />
+      <workItem from="1644123390228" duration="14000" />
+      <workItem from="1644132110383" duration="812000" />
+      <workItem from="1644197728139" duration="130000" />
+      <workItem from="1644386136965" duration="430000" />
+      <workItem from="1644388293446" duration="24000" />
+      <workItem from="1645944965148" duration="215000" />
+      <workItem from="1647032444040" duration="8000" />
+      <workItem from="1647034951791" duration="596000" />
+      <workItem from="1647154317241" duration="1206000" />
+      <workItem from="1648681300629" duration="23000" />
+      <workItem from="1648694215020" duration="311000" />
+      <workItem from="1648694793892" duration="121000" />
+      <workItem from="1648695100266" duration="55000" />
+      <workItem from="1650700968904" duration="712000" />
+      <workItem from="1651130856737" duration="598000" />
+      <workItem from="1651256701702" duration="569000" />
+      <workItem from="1651779528426" duration="33000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Vote_Kicker$badgrouperpy.coverage" NAME="badgrouperpy Coverage Results" MODIFIED="1642139112645" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../Bad Grouper" />
+    <SUITE FILE_PATH="coverage/Vote_Kicker$hunter_bot.coverage" NAME="hunter_bot Coverage Results" MODIFIED="1642056198429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../Hunter Bot" />
+    <SUITE FILE_PATH="coverage/Vote_Kicker$bad_alexa.coverage" NAME="bad_alexa Coverage Results" MODIFIED="1642231287608" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../Bad_Alexa_Bot" />
+    <SUITE FILE_PATH="coverage/Vote_Kicker$vote_kicker_py.coverage" NAME="vote_kicker_py Coverage Results" MODIFIED="1651130858329" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
