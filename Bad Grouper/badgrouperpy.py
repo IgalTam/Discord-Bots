@@ -42,7 +42,10 @@ async def clean(ctx, name='BG_Group_'):
     guild = ctx.message.guild
     g_count = r_count = 0
     for ch in guild.channels:
-        if len(ch.name) >= len(name)+1 and ch.name[0:len(name)] == name and ch.name[len(name)].isdigit():
+        tc_name = format_to_tc(name)
+        if (len(ch.name) >= len(name)+1 or len(ch.name) >= len(tc_name)+1) and \
+        (ch.name[0:len(name)] == name or ch.name[0:len(tc_name)] == tc_name) and \
+        (ch.name[len(name)].isdigit() or ch.name[len(tc_name)].isdigit()):
             await ch.delete()
             g_count += 1
         # elif len(ch.name) >= len(name)+1 and ch.name[0:len(name)] == name:
@@ -164,6 +167,10 @@ def get_role(role_str, guild):
             return role
     return None
 
+def format_to_tc(name):
+    """converts name to text channel format"""
+    lname = name.lower()
+    return lname.replace(" ", "-")
 
 @bot.command(name='make_role', help='[name] creates new role with given name')
 async def make_role(ctx, role_name):

@@ -164,7 +164,7 @@ async def dw(ctx, dur=10, guild_name=None):
     new_flags_2 = new_flags
     new_flags_2.join_notifications = True
     await guild.edit(system_channel_flags=new_flags_2)
-    await ctx.send("welcome messages enabled")
+    await ctx.send("welcome messages re-enabled")
 
 
 @bot.event

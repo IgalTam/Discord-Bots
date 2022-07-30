@@ -224,6 +224,8 @@ async def gb(ctx, usr, guild_name=None):
         for guild_y in bot.guilds:
             if guild_y.name == guild_name:
                 guild = guild_y
+                print("found guild", guild_y)
+    print("end conditional")
 
     # find and impersonate usr
     for user in guild.members:
@@ -253,7 +255,6 @@ async def gpp(ctx, usr, guild_name=None):
         for guild_y in bot.guilds:
             if guild_y.name == guild_name:
                 guild = guild_y
-
     # get avatar of user
     for user in guild.members:
         if (user.name == usr or user.nick == usr) and user.id != guild.me.id:
