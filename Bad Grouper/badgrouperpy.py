@@ -56,6 +56,40 @@ async def clean(ctx, name='BG_Group_'):
             r_count += 1
     await ctx.send(f"{g_count} groups cleaned, {r_count} roles cleaned.")
 
+@bot.command(name='clean_spec', help='[name] [category=None] removes all tcs and vcs with name in category, \
+    or those without a category if no category was specified')
+async def clean_spec(ctx, name='BG_Group_', cat=None):
+    """clears all channels with name from the given category"""
+    guild = ctx.message.guild
+    g_count = 0
+    if cat is None: # if category is none, check each channel with category none
+        for ch in guild.channels:
+            if ch.category is None:
+                print(ch.name)
+                tc_name  = format_to_tc(name)
+                if ch.name[0:len(name)] == name or ch.name[0:len(tc_name)] == tc_name:
+                    await ch.delete()
+                    g_count += 1
+        if g_count == 0:
+            await ctx.send("No channels cleaned.")
+        else:
+            await ctx.send(f"{g_count} channels successfully cleaned.")
+        return
+    else:
+        for cat_y in guild.categories:  # find category
+            if cat_y.name == cat:
+                for ch in cat_y.channels:   # clear channel(s)
+                    print(ch.name)
+                    tc_name  = format_to_tc(name)
+                    if ch.name[0:len(name)] == name or ch.name[0:len(tc_name)] == tc_name:
+                        await ch.delete()
+                        g_count += 1
+                if g_count == 0:
+                    await ctx.send("No channels cleaned.")
+                else:
+                    await ctx.send(f"{g_count} channels successfully cleaned.")
+                return
+    await ctx.send(f"{cat} category not found.")
 
 @bot.command(name='mtr', help='[role] [user1, user2, ...] give role to all listed members '
                               '(requires manage roles permission)')
