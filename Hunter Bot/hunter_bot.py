@@ -64,6 +64,9 @@ async def join_channel(ctx):
 @bot.command(name='play_scream', help='To play hunter scream')
 async def play_scream(ctx):
     print(type(ctx))
+
+    # credit for hunter scream: https://www.youtube.com/watch?v=G-ogxxcSZhM
+
     await safety_disconnect(ctx)
     delay = False
     channel = ctx.message.author.voice.channel

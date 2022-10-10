@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+# from discord.ext import commands // to be implemented later
 from discord import client
 from discord.utils import get
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ load_dotenv()
 
 DISCORD_TOKEN = 'OTI3NzY0MjQyOTY1MzQ0MzM3.YdO9yA.Q9Vx8UlVNEuv6HX0N_Z0t5Em-vo'
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!%', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 
 
 @bot.command(name='make', help='[x] [name=BG_Group_] [role_make=False] create x private tc & vc, custom names optional,'

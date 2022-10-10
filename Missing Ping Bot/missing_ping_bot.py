@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import time
+from dotenv import load_dotenv  
 import youtube_dl
 import asyncio
 import random
+from bot_gen_utils import *
 
 load_dotenv()
 
@@ -65,7 +65,7 @@ async def join_channel(ctx, guild_name=None, usr=None):
             if guild_y.name == guild_name:
                 guild = guild_y
 
-    # find user if not None
+    # find user object
     user = None
     if usr is None:
         user = ctx.author
@@ -88,15 +88,12 @@ async def start_record(ctx, usr, guild_name=None):
 
 async def finished_callback(sink, ctx, usr, guild_name):
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
-    # find user if not None
+    # find user object
     user = None
     if usr is None:
         user = ctx.author
@@ -128,13 +125,10 @@ async def stop_recording(ctx):
 @bot.command()
 async def get_stream_info(ctx, usr, guild_name=None):
     """get streaming info"""
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
     for member in guild.members:
         if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
@@ -145,13 +139,11 @@ async def get_stream_info(ctx, usr, guild_name=None):
 
 @bot.command(name='leave_channel', help='just leave')
 async def leave_channel(ctx, guild_name=None):
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    """disconnect from connected channel"""
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
     try:
         voice_channel = guild.voice_client
         await voice_channel.disconnect()
@@ -161,14 +153,14 @@ async def leave_channel(ctx, guild_name=None):
 
 @bot.command(name='mp', help='Play missing ping')
 async def mp(ctx, guild_name=None, usr=None):
-    # guild, user = find_guild_user(ctx, guild_name, usr)
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    """plays missing ping in the channel usr is currently in"""
+
+    # credit for missing pings: https://www.youtube.com/watch?v=T6dvKYZ7enU
+
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
     # find user if not None
     user = None
@@ -197,14 +189,12 @@ async def safety_disconnect(ctx, guild_name):
     """disconnect bot if it is in a channel"""
 
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
+    # disconnect from channel, if possible
     try:
         voice_client = guild.me.voice.channel
         await voice_client.disconnect()
@@ -217,26 +207,19 @@ async def gb(ctx, usr, guild_name=None):
     """impersonate someone in a guild"""
 
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
-                print("found guild", guild_y)
-    print("end conditional")
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
     # find and impersonate usr
     for user in guild.members:
-        if (user.name == usr or user.nick == usr) and user.id != guild.me.id:
+        if (str(user)[:len(str(user))-5] == usr or user.nick == usr) and user.id != guild.me.id:
             await guild.me.edit(nick=user.nick)
-            await guild.me.edit(name=user.name)
-            await guild.me.edit(color=user.color)
-            ret_img = user.avatar_url_as()
+            ret_img = user.avatar
             mod_img = await ret_img.read()
             if user.activity is None:
-                await bot.change_presence(activity=None)
+                await bot.change_presence(activity=None, status=guild.me.status)
             else:
                 await bot.change_presence(activity=discord.Activity(type=user.activity.type, name=user.activity.name))
             await bot.user.edit(avatar=mod_img)
@@ -248,18 +231,29 @@ async def gpp(ctx, usr, guild_name=None):
     """gets avatar of member in a guild"""
 
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
+    
     # get avatar of user
     for user in guild.members:
         if (user.name == usr or user.nick == usr) and user.id != guild.me.id:
             await ctx.send(user.avatar_url_as())
 
+
+@bot.command()
+async def gsp(ctx, guild_name=None):
+    """gets guild icon"""
+
+    # establish which guild to operate in
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
+
+    # get guild icon
+    await ctx.send(guild.icon_url)
 
 @bot.command()
 async def go_offline(ctx):
@@ -299,13 +293,10 @@ async def on_message(msg):
 async def find_guild_user(ctx, guild_name=None, usr=None):
     """finds user and guild to operate in"""
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
     # find user if not None
     user = None
@@ -323,13 +314,10 @@ async def find_guild_user(ctx, guild_name=None, usr=None):
 async def play_audio_rem(ctx, dur, guild_name=None, usr=None):
     await safety_disconnect(ctx, guild_name)
     # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+    guild = guild_find(ctx, bot, guild_name)
+    if guild is None:
+        await ctx.send("Could not find server.")
+        return
 
     # find user if not None
     user = None
