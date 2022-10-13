@@ -55,7 +55,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 @bot.command(name='join_channel', help='just join')
-async def join_channel(ctx, guild_name=None, usr=None):
+async def join_channel(ctx, guild_name=None, usr=None, chnl=None):
     # establish which guild to operate in
     guild = None
     if guild_name is None:
@@ -64,6 +64,12 @@ async def join_channel(ctx, guild_name=None, usr=None):
         for guild_y in bot.guilds:
             if guild_y.name == guild_name:
                 guild = guild_y
+    
+    # find channel, if specified
+    channel = None
+    if chnl is not None:
+        for chnl_y in guild.channels:
+            pass
 
     # find user object
     user = None
@@ -75,7 +81,8 @@ async def join_channel(ctx, guild_name=None, usr=None):
                 user = member
 
     # connect to channel
-    channel = user.voice.channel
+    if channel is None:
+        channel = user.voice.channel
     await channel.connect()
 
 

@@ -10,23 +10,38 @@ import getopt
 load_dotenv()
 
 DISCORD_TOKEN = 'OTI3NzY0MjQyOTY1MzQ0MzM3.YdO9yA.Q9Vx8UlVNEuv6HX0N_Z0t5Em-vo'
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='/', intents=intents)
 
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.all()
+        intents.message_content = True
+        super().__init__(command_prefix="/*/", intents=intents)
+    
+    async def setup_hook(self) -> None:
+        await self.tree.sync()
+        print(f"Synced slash commands for {self.user}.")
 
-@bot.command(name='make', help='[x] [name=BG_Group_] [role_make=False] create x private tc & vc, custom names optional,'
-                               'associated roles optional')
-async def make(ctx, count, name='BG_Group_', role_make=True):
+    async def on_command_error(self, ctx, error):
+        await ctx.reply(error, ephemeral=True)
+
+bot = Bot() # bot initialization
+
+# @bot.command(name='make', help='[x] [name=BG_Group_] [role_make=False] create x private tc & vc, custom names optional,'
+#                                'associated roles optional')
+@bot.hybrid_command(name = "make", with_app_command=True, description="create x private tc & vc, \
+    custom names optional, associated roles optional")
+@commands.has_permissions(administrator=True)
+async def make(ctx: commands.Context, count, name, role_make=False):
     guild = ctx.message.guild
     dr = guild.default_role
     for ind in range(1, int(count)+1):
         cname = name + str(ind)
         # create custom category
-        category = await guild.create_category(cname, overwrites=None, reason=None, position=None)
+        category = await guild.create_category(cname, reason=None, position=None)
         # create tc
-        tc = await guild.create_text_channel(cname, overwrites=None, category=category, reason=None)
+        tc = await guild.create_text_channel(cname, category=category, reason=None)
         # create vc
-        vc = await guild.create_voice_channel(cname, overwrites=None, category=category, reason=None)
+        vc = await guild.create_voice_channel(cname, category=category, reason=None)
         # if applicable, create role and assign permissions
         if role_make is True:
             role = await make_role(ctx, cname)
@@ -35,11 +50,14 @@ async def make(ctx, count, name='BG_Group_', role_make=True):
             await vc.set_permissions(dr, connect=False, speak=False)
             await vc.set_permissions(role, connect=True, speak=True, manage_channels=True)
 
-    await ctx.send('Created ' + str(count) + ' groups.')
+    await ctx.send("Created " + str(count) + " groups.")
 
 
-@bot.command(name='clean', help='[name] removes all roles, tcs and vcs with name')
-async def clean(ctx, name='BG_Group_'):
+# @bot.command(name='clean', help='[name] removes all roles, tcs and vcs with name')
+@bot.hybrid_command(name = "clean", with_app_command=True, description="removes all roles, tcs and vcs created \
+    by Bad Grouper with name")
+@commands.has_permissions(administrator=True)
+async def clean(ctx: commands.Context, name):
     guild = ctx.message.guild
     g_count = r_count = 0
     for ch in guild.channels:
@@ -49,8 +67,6 @@ async def clean(ctx, name='BG_Group_'):
         (ch.name[len(name)].isdigit() or ch.name[len(tc_name)].isdigit()):
             await ch.delete()
             g_count += 1
-        # elif len(ch.name) >= len(name)+1 and ch.name[0:len(name)] == name:
-            # await ch.delete()
     for role in guild.roles:
         if len(role.name) >= len(name)+1 and role.name[0:len(name)] == name and role.name[len(name)].isdigit():
             await role.delete()
