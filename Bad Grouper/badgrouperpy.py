@@ -6,6 +6,7 @@ from discord.utils import get
 from dotenv import load_dotenv
 from discord import colour as color
 import getopt
+import asyncio
 
 load_dotenv()
 
@@ -49,8 +50,9 @@ async def make(ctx: commands.Context, count, name, role_make=False):
             await tc.set_permissions(role, read_messages=True, send_messages=True, manage_channels=True)
             await vc.set_permissions(dr, connect=False, speak=False)
             await vc.set_permissions(role, connect=True, speak=True, manage_channels=True)
-
-    await ctx.send("Created " + str(count) + " groups.")
+    await ctx.interaction.defer(ephemeral=True)
+    asyncio.sleep(500)
+    await ctx.interaction.send("Created " + str(count) + " groups.")
 
 
 # @bot.command(name='clean', help='[name] removes all roles, tcs and vcs with name')
@@ -71,12 +73,17 @@ async def clean(ctx: commands.Context, name):
         if len(role.name) >= len(name)+1 and role.name[0:len(name)] == name and role.name[len(name)].isdigit():
             await role.delete()
             r_count += 1
+    await ctx.defer(ephemeral=True)
+    asyncio.sleep(500)
     await ctx.send(f"{g_count} groups cleaned, {r_count} roles cleaned.")
 
 @bot.command(name='clean_spec', help='[name] [category=None] removes all tcs and vcs with name in category, \
     or those without a category if no category was specified')
-async def clean_spec(ctx, name='BG_Group_', cat=None):
+# @bot.hybrid_command(name="clean_spec", with_app_command=True, description="removes all tcs and vcs with name in category, \
+#     or those without a category if no category was specified")
+async def clean_spec(ctx: commands.Context, name, cat=None):
     """clears all channels with name from the given category"""
+    # [WIP] bugfix to enable hybrid command compatibility
     guild = ctx.message.guild
     g_count = 0
     if cat is None: # if category is none, check each channel with category none
@@ -106,11 +113,11 @@ async def clean_spec(ctx, name='BG_Group_', cat=None):
                 else:
                     await ctx.send(f"{g_count} channels successfully cleaned.")
                 return
-    await ctx.send(f"{cat} category not found.")
+        await ctx.send(f"{g_count} category not found.")
 
 @bot.command(name='mtr', help='[role] [user1, user2, ...] give role to all listed members '
                               '(requires manage roles permission)')
-async def mtr(ctx, role, *users):
+async def mtr(ctx: commands.Context, role, *users):
     guild = ctx.message.guild
     role_obj = get_role(role, guild)
     if ctx.message.author.guild_permissions.manage_roles is False:
@@ -130,7 +137,7 @@ async def mtr(ctx, role, *users):
         await ctx.send('{} now have {} role'.format(users, role))
 
 
-async def mtr_2(ctx, role, users):
+async def mtr_2(ctx: commands.Context, role, users):
     """version compatible with mult"""
     guild = ctx.message.guild
     role_obj = get_role(role, guild)
@@ -156,7 +163,10 @@ async def mtr_2(ctx, role, users):
 
 @bot.command(name='rmr', help='[role] [user1, user2, ...] remove role from all listed members '
                               '(requires manage roles permission)')
-async def rmr(ctx, role, *users):
+# @bot.hybrid_command(name="rmr", with_app_command=True, description="remove role from all listed members \
+#                                 (requires manage roles permission)")
+async def rmr(ctx: commands.Context, role, *users):
+    # variable argument count not yet supported for hybrid/slash commands
     guild = ctx.message.guild
     role_obj = get_role(role, guild)
     if ctx.message.author.guild_permissions.manage_roles is False:
@@ -179,7 +189,7 @@ async def rmr(ctx, role, *users):
             await ctx.send('{} removed from {}'.format(role, end_users))
 
 
-async def rmr_2(ctx, role, users):
+async def rmr_2(ctx: commands.Context, role, users):
     """version compatible with mult"""
     guild = ctx.message.guild
     role_obj = get_role(role, guild)
@@ -203,7 +213,7 @@ async def rmr_2(ctx, role, users):
             await ctx.send('{} removed from {}'.format(role, end_users))
 
 
-def get_member(name, guild):
+def get_member(name, guild: discord.Guild):
     """retrieves member object with nickname [name] and in guild [guild]"""
     for member in guild.members:
         if member.name == name or member.nick == name:
@@ -211,27 +221,29 @@ def get_member(name, guild):
     return None
 
 
-def get_role(role_str, guild):
+def get_role(role_str, guild: discord.Guild):
     """retrieves role object with name [role] and in guilp[d [guild]"""
     for role in guild.roles:
         if role.name == role_str:
             return role
     return None
 
-def format_to_tc(name):
+def format_to_tc(name: str):
     """converts name to text channel format"""
     lname = name.lower()
     return lname.replace(" ", "-")
 
-@bot.command(name='make_role', help='[name] creates new role with given name')
-async def make_role(ctx, role_name):
+# @bot.command(name='make_role', help='[name] creates new role with given name')
+@bot.hybrid_command(name="make_role", with_app_command=True, description="creates new role with given name")
+async def make_role(ctx: commands.Context, role_name):
     guild = ctx.message.guild
     await ctx.send(f"{role_name} role created.")
     return await guild.create_role(reason=None, name=role_name)
 
 
-@bot.command(name='rem_role', help='[name] removes all instances of role')
-async def rem_role(ctx, role_name):
+# @bot.command(name='rem_role', help='[name] removes all instances of role')
+@bot.hybrid_command(name="rem_role", with_app_command=True, description="removes all instances of role with given name")
+async def rem_role(ctx: commands.Context, role_name):
     guild = ctx.message.guild
     count = 0
     for role in await guild.fetch_roles():
@@ -241,18 +253,22 @@ async def rem_role(ctx, role_name):
     await ctx.send(f"{count} instances of {role_name} removed.")
 
 
-@bot.command(name='list_roles', help='lists all roles on server')
-async def list_roles(ctx):
+# @bot.command(name='list_roles', help='lists all roles on server')
+@bot.hybrid_command(name="list_roles", with_app_command=True, description="lists all roles on server")
+async def list_roles(ctx: commands.Context):
     guild = ctx.message.guild
+    role_str = ""
     for role in await guild.fetch_roles():
         if "everyone" not in role.name:
-            await ctx.send(role.name)
+            role_str += f"{role.name}\n"
+    await ctx.send(role_str)
     await ctx.send(">> All roles listed.")
 
 
 @bot.command(name='mult', help='use mult_help or mult -h for more info')
-async def mult(ctx, *args):
+async def mult(ctx: commands.Context, *args):
     """general purpose command"""
+    # variable argument count not yet supported for hybrid/slash commands
     role = make_b = clean_b = move = chan_role = role_del = False
     role_name = group_name = clean_name = move_name = role_del_name = None
     count = 0
@@ -345,7 +361,7 @@ async def mult(ctx, *args):
 
 
 @bot.command(name='mult_help', help='explains mult (think Unix man pages)')
-async def mult_help(ctx):
+async def mult_help(ctx: commands.Context):
     """essentially a man page for mult"""
     await ctx.send("mult -r [name='BG_Group_'] -R [name] -A -m [name='BG_Group_'] -M [count] -c [name='BG_Group_'] "
                    "-v [name] -g -e [usr1, usr2, ...]\n-r [name='BG_Group_']: create role with name\n-R [name]: "
@@ -360,8 +376,9 @@ async def on_ready():
     print("bot ready")
 
 
-@bot.command(name='ping', help='pingpong')
-async def ping(ctx):
+# @bot.command(name='ping', help='pingpong')
+@bot.hybrid_command(name="ping", with_app_command=True, description="pingpong")
+async def ping(ctx: commands.Context):
     await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 
 
