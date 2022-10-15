@@ -1,123 +1,96 @@
+from aiohttp import ClientError
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import time
-import youtube_dl
 import random
 import asyncio
+import botaudioutils
+import bot_gen_utils
 # from keep_alive import keep_alive
 
 load_dotenv()
 
 DISCORD_TOKEN = 'ODU0MTAwMTA0ODc3MTc4OTAw.YMfAtQ.59nNdL-OiILFKBwhz0LRayrgeRs'
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!$!', intents=intents, status=discord.Status.offline)
-bot.delay = True  # global boolean for auto mode
 
-youtube_dl.utils.bugs_reports_message = lambda: ''
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.all()
+        intents.message_content = True
+        super().__init__(command_prefix="!$!", intents=intents,\
+             status=discord.Status.offline)
+    
+    async def setup_hook(self) -> None:
+        await self.tree.sync()
+        print(f"Synced slash commands for {self.user}.")
 
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
+    async def on_command_error(self, ctx, error):
+        await ctx.reply(error, ephemeral=True)
 
-ffmpeg_options = {
-    'options': '-vn'
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+bot = Bot()
 
 
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = ""
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-        filename = data['title'] if stream else ytdl.prepare_filename(data)
-        return filename
-
-
-@bot.command(name='join_channel', help='just join')
-async def join_channel(ctx):
-    delay = False
+@bot.hybrid_command(name="jchl", with_app_command=True, description="joins channel")
+# @bot.command(name='join_channel', help='just join')
+async def join_channel(ctx: commands.Context):
     channel = ctx.message.author.voice.channel
     await channel.connect()
 
 
-@bot.command(name='play_scream', help='To play hunter scream')
-async def play_scream(ctx):
-    print(type(ctx))
+@bot.hybrid_command(name="lchl", with_app_command=True, description="leaves current channel")
+# @bot.command(name='join_channel', help='just join')
+async def leave_channel(ctx: commands.Context):
+    # try:
+    discord.VoiceClient.disconnect()
+    # except:
+    #     pass
+
+@bot.hybrid_command(name="play_scrm", with_app_command=True, description="play hunter scream")
+# @bot.command(name='play_scream', help='To play hunter scream')
+async def play_scream(ctx: commands.Context, guildn=None, usern=None):
 
     # credit for hunter scream: https://www.youtube.com/watch?v=G-ogxxcSZhM
 
-    await safety_disconnect(ctx)
-    delay = False
-    channel = ctx.message.author.voice.channel
-    await channel.connect()
-    voice_client = ctx.message.guild.voice_client
-    try:
-        server = ctx.message.guild
-        voice_channel = server.voice_client
+    guild = bot_gen_utils.guild_find(ctx, bot, guildn)
+    user = bot_gen_utils.user_find(ctx, guild, usern)
 
+    await safety_disconnect(ctx)
+    try:
+        channel = user.voice.channel
+        await channel.connect()
+        voice_client = guild.voice_client
+        server = guild
+        voice_channel = server.voice_client
         async with ctx.typing():
-            filename = await YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=bot.loop)
+            print("async with typing")
+            filename = await botaudioutils.YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=bot.loop)
             voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
         await asyncio.sleep(4)
         await voice_client.disconnect()
-    except:
-        await ctx.send("The bot is not connected to a voice channel.")
+        await ctx.send("Operation successful")
+    except AttributeError:
+        await ctx.send("Guild or user not found.")
 
 
-@bot.command(name='en_auto', help='enables auto mode, see !$!help_auto for more info')
-async def en_auto(ctx, delay_time):
+@bot.hybrid_command(name='en_auto', with_app_command=True, description="delays play_scrm for [input] minutes")
+# @bot.command(name='en_auto', help='enables auto mode, see !$!help_auto for more info')
+async def en_auto(ctx: commands.Context, delay_time):
     print('enabling auto mode')
-    bot.delay = True
-    while bot.delay is True:
-        if float(delay_time) > 0:
-            time.sleep(int(60*float(delay_time)))
-            await play_scream(ctx)
-        else:
-            await ctx.send('invalid input')
-            break
+    if float(delay_time) > 0:
+        await asyncio.sleep(int(60*float(delay_time)))
+        await play_scream(ctx)
+    else:
+        await ctx.send('invalid input')
 
 
-@bot.command(name='en_auto_rand', help='enables auto mode at random, see !$!help_auto for more info')
-async def en_auto_rand(ctx):
+@bot.hybrid_command(name='en_auto_rand', with_app_command=True, description="elays play_scrm" \
+     " between 1 and 5 minutes at random")
+# @bot.command(name='en_auto_rand', help='delays play_scrm between 1 and 5 minutes at random')
+async def en_auto_rand(ctx: commands.Context):
     print('enabling auto random mode')
     bot.delay = True
     while bot.delay is True:
-        time.sleep(int(60 * float(random.randint(1, 5))))
+        await asyncio.sleep(int(60 * float(random.randint(1, 5))))
         await play_scream(ctx)
-
-
-@bot.command(name='dis_auto', help='disables auto mode')
-async def dis_auto(ctx):
-    print('disabling auto mode')
-    bot.delay = False
-
-
-@bot.command(name='help_auto', help='explains auto mode')
-async def dis_auto(ctx):
-    await ctx.send('en_auto usage: !$!en_auto [input]. Valid [input] is any decimal or integer greater than 0 or '
-                   'r. Every [input] minutes Hunter Bot will play_scream in the voice channel that the user '
-                   'called en_auto from. If !$!en_auto_rand is used, play_scream will run every 1-5 minutes.')
 
 
 @bot.event
@@ -125,19 +98,18 @@ async def on_message(message):
     if "zHunter Bot MkII" in message.content:
         await message.delete()
     for member in message.mentions:
-        print(member)
         if member.name == "zHunter Bot MkII":
             await message.delete()
     await bot.process_commands(message)
 
 
-async def safety_disconnect(ctx):
+async def safety_disconnect(ctx: commands.Context):
     """disconnect bot if it is in a channel"""
     voice_client = ctx.message.guild.voice_client
     try:
         await voice_client.disconnect()
     except:
-        pass
+        await ctx.send("Safety disconnect failed.")
 
 
 @bot.command()
@@ -175,7 +147,8 @@ async def on_ready():
     print("bot ready")
 
 
-@bot.command(name='ping', help='pingpong')
+@bot.hybrid_command(name="ping", with_app_command=True, description="pingpong")
+# @bot.command(name='ping', help='pingpong')
 async def ping(ctx):
     await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 

@@ -9,9 +9,9 @@ load_dotenv()
 
 DISCORD_TOKEN = 'ODY5MTQ3MDgyNDI5MTk0Mjcw.YP5-TA.iyFzWAgWNYoj8Qkqsv2q2hP7jJA'
 
-client = discord.Client()
-guild = discord.Guild
 intents = discord.Intents.all()
+client = discord.Client(intents=intents)
+guild = discord.Guild
 bot = commands.Bot(command_prefix=')', intents=intents, status=discord.Status.offline)
 
 youtube_dl.utils.bugs_reports_message = lambda: ''
@@ -75,10 +75,10 @@ async def p(ctx):
         voice_channel = server.voice_client
 
         async with ctx.typing():
+            print("async with typing")
             filename = await YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=bot.loop)
             voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
         await asyncio.sleep(4)
-        i = 0
         await voice_client.disconnect()
         await ctx.guild.leave()
     except:
@@ -125,7 +125,7 @@ def fetch_home_base():  # home base
 async def on_guild_join(guild_in):
     try:
         # if guild_in.id != fetch_home_base():
-        tar_chan = find_channel(await guild_in.fetch_channels(), "General")
+        tar_chan = find_channel(await guild_in.fetch_channels(), "Embassy of Hamsters")
         print("found channel")
         await tar_chan.connect()
         voice_client = guild_in.voice_client

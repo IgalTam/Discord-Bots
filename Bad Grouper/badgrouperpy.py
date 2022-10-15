@@ -33,6 +33,7 @@ bot = Bot() # bot initialization
     custom names optional, associated roles optional")
 @commands.has_permissions(administrator=True)
 async def make(ctx: commands.Context, count, name, role_make=False):
+    await ctx.send("Creating groups...")
     guild = ctx.message.guild
     dr = guild.default_role
     for ind in range(1, int(count)+1):
@@ -50,9 +51,7 @@ async def make(ctx: commands.Context, count, name, role_make=False):
             await tc.set_permissions(role, read_messages=True, send_messages=True, manage_channels=True)
             await vc.set_permissions(dr, connect=False, speak=False)
             await vc.set_permissions(role, connect=True, speak=True, manage_channels=True)
-    await ctx.interaction.defer(ephemeral=True)
-    asyncio.sleep(500)
-    await ctx.interaction.send("Created " + str(count) + " groups.")
+    await ctx.send("Created " + str(count) + " groups.")
 
 
 # @bot.command(name='clean', help='[name] removes all roles, tcs and vcs with name')
@@ -60,6 +59,7 @@ async def make(ctx: commands.Context, count, name, role_make=False):
     by Bad Grouper with name")
 @commands.has_permissions(administrator=True)
 async def clean(ctx: commands.Context, name):
+    await ctx.send("Cleaning...")
     guild = ctx.message.guild
     g_count = r_count = 0
     for ch in guild.channels:
@@ -73,9 +73,7 @@ async def clean(ctx: commands.Context, name):
         if len(role.name) >= len(name)+1 and role.name[0:len(name)] == name and role.name[len(name)].isdigit():
             await role.delete()
             r_count += 1
-    await ctx.defer(ephemeral=True)
-    asyncio.sleep(500)
-    await ctx.send(f"{g_count} groups cleaned, {r_count} roles cleaned.")
+    await ctx.send(f"{g_count} channels cleaned, {r_count} roles cleaned.")
 
 @bot.command(name='clean_spec', help='[name] [category=None] removes all tcs and vcs with name in category, \
     or those without a category if no category was specified')
