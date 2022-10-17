@@ -1,6 +1,6 @@
 from tkinter.tix import MAIN
 import bot_gen_utils
-from config import VOTEKICK
+from config import VOTEKICK, OP_ID_EXT
 import asyncio
 import discord
 from discord.ext import commands
@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DISCORD_TOKEN = VOTEKICK
-OP_ID = 386648374469722144 # put your discord ID here if you want
-                           # maintenance enabling
+OP_ID = OP_ID_EXT # put your discord ID here if you want
+                           # to use the maintenance flag
 MAINT_FLAG = False # prevents operator from getting votekicked while working on bot
 
 class Bot(commands.Bot):
