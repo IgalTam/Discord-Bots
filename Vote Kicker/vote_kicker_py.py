@@ -1,4 +1,3 @@
-from tkinter.tix import MAIN
 import bot_gen_utils
 from config import VOTEKICK, OP_ID_EXT
 import asyncio
@@ -117,6 +116,49 @@ async def vote(ctx, durat):
             return 1 # yes
         else:
             return 2 # no
+
+
+@bot.hybrid_command(name='genmultvote', with_app_command=True, description='create a poll for up to 10 messages')
+async def genmultvote(ctx: commands.Context, msg1: str, msg2: str, msg3=None, msg4=None, msg5=None, msg6=None,\
+        msg7=None, msg8=None, msg9=None, msg10=None, timer=30):
+    if msg1 is None or msg2 is None:
+        return await ctx.send("Insufficient poll options.")
+    msg_arr = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10]
+    opts = 0
+    await ctx.send("Multivote options:")
+    for msg in msg_arr:
+        if msg is None:
+            break
+        opts += 1
+    await ctx.send(bot_gen_utils.inputs_in_numbered_str(msg_arr, '\n'))
+    result = await vote_multi(ctx, opts, timer)
+    await ctx.send(f"Winning option: {msg_arr[result]}")
+
+
+async def vote_multi(ctx: commands.Context, opt_count, durat):
+    """voting-enabling function, uses number emojis to represent option weights"""
+    num_emoj_table = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', \
+        '7️⃣', '8️⃣', '9️⃣', '🔟']
+    message = await ctx.send("React to this message to vote.")
+    for i in range(opt_count):
+        await asyncio.gather(message.add_reaction(num_emoj_table[i]))
+
+    def check(m):
+        return m.content == 'cancel' and m.channel == ctx.message.channel
+
+    try:
+        await bot.wait_for('message', timeout=durat, check=check)
+        cache_msg = discord.utils.get(bot.cached_messages, id=message.id)
+        max_val = max(cache_msg.reactions[i].count for i in range(len(cache_msg.reactions)))
+        for msg in cache_msg.reactions:
+            if msg.count == max_val:
+                return cache_msg.reactions.index(msg)
+    except asyncio.TimeoutError:
+        cache_msg = discord.utils.get(bot.cached_messages, id=message.id)
+        max_val = max(cache_msg.reactions[i].count for i in range(len(cache_msg.reactions)))
+        for msg in cache_msg.reactions:
+            if msg.count == max_val:
+                return cache_msg.reactions.index(msg)
 
 
 @bot.event

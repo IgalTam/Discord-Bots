@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-# from discord.ext import commands // to be implemented later
+from config import BAD_GRPR
 from discord import client
 from discord.utils import get
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ import asyncio
 
 load_dotenv()
 
-DISCORD_TOKEN = 'OTI3NzY0MjQyOTY1MzQ0MzM3.YdO9yA.Q9Vx8UlVNEuv6HX0N_Z0t5Em-vo'
+DISCORD_TOKEN = BAD_GRPR
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -65,12 +65,12 @@ async def clean(ctx: commands.Context, name):
     for ch in guild.channels:
         tc_name = format_to_tc(name)
         if (len(ch.name) >= len(name)+1 or len(ch.name) >= len(tc_name)+1) and \
-        (ch.name[0:len(name)] == name or ch.name[0:len(tc_name)] == tc_name) and \
+        (ch.name[:len(name)] == name or ch.name[:len(tc_name)] == tc_name) and \
         (ch.name[len(name)].isdigit() or ch.name[len(tc_name)].isdigit()):
             await ch.delete()
             g_count += 1
     for role in guild.roles:
-        if len(role.name) >= len(name)+1 and role.name[0:len(name)] == name and role.name[len(name)].isdigit():
+        if len(role.name) >= len(name)+1 and role.name[:len(name)] == name and role.name[len(name)].isdigit():
             await role.delete()
             r_count += 1
     await ctx.send(f"{g_count} channels cleaned, {r_count} roles cleaned.")

@@ -33,3 +33,11 @@ def get_member_name(target: discord.Member):
     elif target.nick is None:
         return target.name
     return target.nick
+
+def inputs_in_numbered_str(arr, delimiter=""):
+    """put variable length array inputs into a string, separated by delimiter and preceded by order number"""
+    out_str = ""
+    for i in range(len(arr)):
+        if arr[i] is not None:
+            out_str += f"{str(i+1)}. " + str(arr[i]) + delimiter
+    return out_str

@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import time
+from config import HUNTER2
 import youtube_dl
 import asyncio
 
 load_dotenv()
 
-DISCORD_TOKEN = 'ODY5MTQ3MDgyNDI5MTk0Mjcw.YP5-TA.iyFzWAgWNYoj8Qkqsv2q2hP7jJA'
+DISCORD_TOKEN = HUNTER2
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
