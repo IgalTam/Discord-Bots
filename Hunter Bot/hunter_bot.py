@@ -34,12 +34,6 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-# @bot.hybrid_command(name="jchl", with_app_command=True,\
-#     description="joins channel")
-# async def jchl(ctx: commands.Context):
-#     channel = ctx.message.author.voice.channel
-#     await channel.connect()
-
 @bot.hybrid_command(name="rle", with_app_command=True,\
     description="reload extension")
 async def rle(ctx, filename):
@@ -120,7 +114,8 @@ async def get_system_flags(ctx: commands.Context):
     await ctx.send(ctx.message.guild.system_channel_flags.join_notifications)
 
 
-@bot.command()
+@bot.hybrid_command(name='dw', with_app_command=True, description='secret')
+@commands.has_permissions(administrator=True)
 async def dw(ctx: commands.Context, dur=10, guild_name=None):
     """disables welcome message on guild join for dur seconds"""
     guild = guild_find(ctx, bot, guild_name)
@@ -135,21 +130,10 @@ async def dw(ctx: commands.Context, dur=10, guild_name=None):
     await ctx.send(f"welcome messages in guild {guild.name} re-enabled")
 
 
-# @bot.event
-# async def on_ready():
-#     print("bot ready")
-
-# @bot.event
-# async def on_connect():
-#     bot.load_extension('cogs.cmdutils')
-
-# @bot.hybrid_command(name="ping", with_app_command=True, description="pingpong")
-# # @bot.command(name='ping', help='pingpong')
-# async def ping(ctx):
-#     await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
+@bot.event
+async def on_ready():
+    print("bot ready")
 
 
 if __name__ == "__main__":
     bot.run(DISCORD_TOKEN)
-
-# asyncio.run(main())
