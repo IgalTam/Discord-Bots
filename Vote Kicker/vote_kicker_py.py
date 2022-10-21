@@ -19,8 +19,7 @@ class Bot(commands.Bot):
         intents = discord.Intents.all()
         intents.message_content = True
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        super().__init__(command_prefix="!*!", intents=intents,\
-             status=discord.Status.offline)
+        super().__init__(command_prefix="!*!", intents=intents)
     
     async def setup_hook(self) -> None:
         await self.tree.sync()
