@@ -1,4 +1,5 @@
-from aiohttp import ClientError
+from config import HUNTER
+from bot_gen_utils import guild_find
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -6,11 +7,13 @@ import random
 import asyncio
 import botaudioutils
 import bot_gen_utils
+import os
 # from keep_alive import keep_alive
 
 load_dotenv()
 
-DISCORD_TOKEN = 'ODU0MTAwMTA0ODc3MTc4OTAw.YMfAtQ.59nNdL-OiILFKBwhz0LRayrgeRs'
+DISCORD_TOKEN = HUNTER
+MK2_LINK = 'https://discord.com/api/oauth2/authorize?client_id=869147082429194270&permissions=8&scope=bot'
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -20,6 +23,9 @@ class Bot(commands.Bot):
              status=discord.Status.offline)
     
     async def setup_hook(self) -> None:
+        for filename in os.listdir('./Hunter Bot/cogs'):
+            if filename.endswith('.py'):
+                await self.load_extension(f'cogs.{filename[:-3]}')
         await self.tree.sync()
         print(f"Synced slash commands for {self.user}.")
 
@@ -28,21 +34,10 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-
-@bot.hybrid_command(name="jchl", with_app_command=True, description="joins channel")
-# @bot.command(name='join_channel', help='just join')
-async def join_channel(ctx: commands.Context):
-    channel = ctx.message.author.voice.channel
-    await channel.connect()
-
-
-@bot.hybrid_command(name="lchl", with_app_command=True, description="leaves current channel")
-# @bot.command(name='join_channel', help='just join')
-async def leave_channel(ctx: commands.Context):
-    # try:
-    discord.VoiceClient.disconnect()
-    # except:
-    #     pass
+@bot.hybrid_command(name="rle", with_app_command=True,\
+    description="reload extension")
+async def rle(ctx, filename):
+    await bot.reload_extension(f'cogs.{filename[:-3]}')
 
 @bot.hybrid_command(name="play_scrm", with_app_command=True, description="play hunter scream")
 # @bot.command(name='play_scream', help='To play hunter scream')
@@ -113,44 +108,31 @@ async def safety_disconnect(ctx: commands.Context):
 
 
 @bot.command()
-async def get_system_flags(ctx):
+async def get_system_flags(ctx: commands.Context):
     """gets system channel flags of guild"""
     await ctx.send(ctx.message.guild.system_channel_flags)
     await ctx.send(ctx.message.guild.system_channel_flags.join_notifications)
 
 
-@bot.command()
-async def dw(ctx, dur=10, guild_name=None):
+@bot.hybrid_command(name='dw', with_app_command=True, description='secret')
+@commands.has_permissions(administrator=True)
+async def dw(ctx: commands.Context, dur=10, guild_name=None):
     """disables welcome message on guild join for dur seconds"""
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
-    old_flags = guild.system_channel_flags
-    new_flags = old_flags
-    new_flags.join_notifications = False
-    await guild.edit(system_channel_flags=new_flags)
-    await ctx.send("welcome messages disabled, use https://discord.com/api/oauth2/authorize?client"
-                   "_id=869147082429194270&permissions=8&scope=bot for mk II")
+    guild = guild_find(ctx, bot, guild_name)
+    sys_flags = guild.system_channel_flags # get current system flags of guild
+    sys_flags.join_notifications = False 
+    await guild.edit(system_channel_flags=sys_flags) # set guild notif. flag to false
+    await ctx.send(f"welcome messages in guild {guild.name} disabled, "\
+        f" use {MK2_LINK} for mk II")
     await asyncio.sleep(int(dur))
-    new_flags_2 = new_flags
-    new_flags_2.join_notifications = True
-    await guild.edit(system_channel_flags=new_flags_2)
-    await ctx.send("welcome messages re-enabled")
+    sys_flags.join_notifications = True
+    await guild.edit(system_channel_flags=sys_flags) # restore guild notif. flag
+    await ctx.send(f"welcome messages in guild {guild.name} re-enabled")
 
 
 @bot.event
 async def on_ready():
     print("bot ready")
-
-
-@bot.hybrid_command(name="ping", with_app_command=True, description="pingpong")
-# @bot.command(name='ping', help='pingpong')
-async def ping(ctx):
-    await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 
 
 if __name__ == "__main__":
