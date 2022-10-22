@@ -1,8 +1,8 @@
 secrets.txt
 **/config.py
 *.jpg
-__pycache__/
+#__pycache__/
 *.m4a
 *.webm*
-.idea/
+#.idea/
 Hunter\ Bot/keep_alive.py
