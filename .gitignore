@@ -3,3 +3,5 @@ secrets.txt
 *.jpg
 __pycache__/
 *.m4a
+*.webm*
+.idea/
