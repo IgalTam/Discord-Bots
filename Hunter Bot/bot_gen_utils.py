@@ -25,3 +25,5 @@ def user_find(ctx: commands.Context, guild: discord.Guild, usr):
             if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
                 user = member
     return user
+
+# test tjomg
