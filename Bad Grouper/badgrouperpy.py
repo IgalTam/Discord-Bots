@@ -6,7 +6,7 @@ from discord.utils import get
 from dotenv import load_dotenv
 from discord import colour as color
 import getopt
-import asyncio
+import os
 
 load_dotenv()
 
@@ -19,6 +19,9 @@ class Bot(commands.Bot):
         super().__init__(command_prefix="/*/", intents=intents)
     
     async def setup_hook(self) -> None:
+        for filename in os.listdir('./Bad Grouper/cogs'):
+            if filename.endswith('.py'):
+                await self.load_extension(f'cogs.{filename[:-3]}')
         await self.tree.sync()
         print(f"Synced slash commands for {self.user}.")
 
@@ -27,8 +30,6 @@ class Bot(commands.Bot):
 
 bot = Bot() # bot initialization
 
-# @bot.command(name='make', help='[x] [name=BG_Group_] [role_make=False] create x private tc & vc, custom names optional,'
-#                                'associated roles optional')
 @bot.hybrid_command(name = "make", with_app_command=True, description="create x private tc & vc, \
     custom names optional, associated roles optional")
 @commands.has_permissions(administrator=True)
@@ -54,7 +55,6 @@ async def make(ctx: commands.Context, count, name, role_make=False):
     await ctx.send("Created " + str(count) + " groups.")
 
 
-# @bot.command(name='clean', help='[name] removes all roles, tcs and vcs with name')
 @bot.hybrid_command(name = "clean", with_app_command=True, description="removes all roles, tcs and vcs created \
     by Bad Grouper with name")
 @commands.has_permissions(administrator=True)
@@ -372,12 +372,6 @@ async def mult_help(ctx: commands.Context):
 @bot.event
 async def on_ready():
     print("bot ready")
-
-
-# @bot.command(name='ping', help='pingpong')
-@bot.hybrid_command(name="ping", with_app_command=True, description="pingpong")
-async def ping(ctx: commands.Context):
-    await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 
 
 if __name__ == "__main__":
