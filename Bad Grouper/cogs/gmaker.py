@@ -12,6 +12,11 @@ class Gmaker(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Gmaker Cog loaded.")
+
+    def guild_owner_only():
+        async def predicate(ctx: commands.Context):
+            return ctx.author == ctx.guild.owner  # checks if author is the owner
+        return commands.check(predicate)
     
     @commands.hybrid_command(name="gmake", with_app_command=True,\
         description="creates channels based on an input file")
@@ -54,15 +59,36 @@ class Gmaker(commands.Cog):
     @commands.hybrid_command(name="cgmake", with_app_command=True,\
         description="clears all channels in guild, then creates new"\
         " channels from input file")
-    @commands.has_permissions(administrator=True)
+    @guild_owner_only()
     async def cgmake(self, ctx: commands.Context, infile: discord.Attachment):
-        for chnl in ctx.message.guild.channels:
-            if chnl != ctx.message.channel:
-                await chnl.delete()
-        await self.gmake(ctx, infile)
-        await ctx.send("Guild channels remade. Deleting this channel in 30 seconds.")
-        await asyncio.sleep(30)
-        await ctx.message.channel.delete()
+        # confirm owner intentions
+        await ctx.send("This action has significant impact on your guild and is irreversible. "\
+            "Are you sure you would like to proceed? [Y/N]")
+
+        def check(msg: discord.Message):
+            return msg.author == ctx.author and msg.channel == ctx.channel and \
+            msg.content.lower() in ["y", "n", "yes", "no"]
+
+        try:
+            msg = await self.bot.wait_for("message", check=check, timeout=10)
+        except asyncio.TimeoutError:
+            await ctx.send("Did not receive valid confirmation in time, cancelling guild channel wipe...")
+            return
+        if msg.content.lower() == "n" or msg.content.lower() == "no":
+            await ctx.send("Cancelling guild channel wipe...")
+            return
+        else:
+            await ctx.send("Initiating guild channel wipe...")
+            # delete all channels except for ctx channel
+            for chnl in ctx.message.guild.channels:
+                if chnl != ctx.message.channel:
+                    await chnl.delete()
+            
+            # create new channels
+            await self.gmake(ctx, infile)
+            await ctx.send("Guild channels remade. Deleting this channel in 30 seconds.")
+            await asyncio.sleep(30)
+            await ctx.message.channel.delete()
     
     @commands.hybrid_command(name="gmakesnap", with_app_command=True,\
         description="saves current channel layout as \"gmake\" text file")
