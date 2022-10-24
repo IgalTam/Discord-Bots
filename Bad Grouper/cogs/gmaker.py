@@ -100,9 +100,37 @@ class Gmaker(commands.Cog):
     
     @commands.hybrid_command(name="gmakesnap", with_app_command=True,\
         description="saves current channel layout as \"gmake\" text file")
-    async def gmakesnap(self, ctx: commands.Context):
-        # TODO
-        pass
+    async def gmakesnap(self, ctx: commands.Context, des_filename: str):
+        # parse filename
+        await ctx.send("Parsing filename...")
+        if des_filename.count('.') > 0:
+            await ctx.send(f"{des_filename} is invalid, input filename cannot contain \'.\'.")
+            return
+
+        # write channels to file
+        await ctx.send("Creating \"gmake\" file...")
+        with open(f"{des_filename}.txt", 'w') as fp:
+            for chnl_tup in ctx.message.guild.by_category():
+                # get category channel
+                if chnl_tup[0] is not None:
+                    fp.write(f"cat:{chnl_tup[0].name}\n")
+                # get category member channels
+                for sub_chnl in chnl_tup[1]:
+                    if isinstance(sub_chnl, discord.CategoryChannel):
+                        fp.write("cat:")
+                    elif isinstance(sub_chnl, discord.TextChannel):
+                        fp.write("tc:")
+                    else:
+                        fp.write("vc:")
+                    fp.write(f"{sub_chnl.name}\n")
+        
+        # send file to user and clean up
+        fp.close()
+        try:
+            await ctx.author.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+        except discord.Forbidden:
+            await ctx.channel.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+        os.unlink(fp.name)
 
     @commands.hybrid_command(name="gmakeinter", with_app_command=True,\
         description="dynamically takes user input to create \"gmake\" text file")
