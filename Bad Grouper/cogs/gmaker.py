@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 import asyncio
 import os
-import tempfile
 
 class Gmaker(commands.Cog):
     """commands for creating guild channels from input files
@@ -17,12 +16,15 @@ class Gmaker(commands.Cog):
         print("Gmaker Cog loaded.")
 
     def guild_owner_only():
+        """function to check whether command is called by guild owner"""
         async def predicate(ctx: commands.Context):
-            return ctx.author == ctx.guild.owner  # checks if author is the owner
+            return ctx.author == ctx.guild.owner  # checks if author is the guild owner
         return commands.check(predicate)
-    
+
+
     @commands.hybrid_command(name="gmake", with_app_command=True,\
         description="creates channels based on a \"gmake\" input file")
+    @commands.has_permissions(administrator=True)
     async def gmake(self, ctx: commands.Context, infile: discord.Attachment):
         
         # parse file
@@ -40,10 +42,10 @@ class Gmaker(commands.Cog):
             fo.close()
             cur_cat = None
             succ_chns = 0
-            for chnl in chnls: # processing individual channel names
+            for chnl in chnls: # process individual channel names
                 if chnl.count(':') != 1:
                     await ctx.send("Skipping invalid channel...")
-                else:
+                else: # create channel based on valid data
                     chnl_arr = chnl.split(':')
                     chnl_type, chnl_nm = chnl_arr[0], chnl_arr[1]
                     if chnl_type == "cat":
@@ -108,7 +110,6 @@ class Gmaker(commands.Cog):
     
     @commands.hybrid_command(name="gmakesnap", with_app_command=True,\
         description="saves current channel hierarchy as a \"gmake\" text file")
-    @commands.has_permissions(administrator=True)
     async def gmakesnap(self, ctx: commands.Context, des_filename: str):
         # parse filename
         await ctx.send("Parsing filename...")
@@ -136,10 +137,13 @@ class Gmaker(commands.Cog):
         # send file to user and clean up
         fp.close()
         try:
-            await ctx.author.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+            await ctx.author.send(file=discord.File(fp=f"{des_filename}.txt"), \
+                content="Process complete. Here is your \"gmake\" text file.")
         except discord.Forbidden:
-            await ctx.channel.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+            await ctx.channel.send(file=discord.File(fp=f"{des_filename}.txt"), \
+                content="Process complete. Here is your \"gmake\" text file.")
         os.unlink(fp.name)
+
 
     @commands.hybrid_command(name="gmakeinter", with_app_command=True,\
         description="dynamically takes user input to create \"gmake\" text file")
@@ -166,9 +170,11 @@ class Gmaker(commands.Cog):
             # write channel to file_pointer
             await ctx.send("New channel. What type would you like it to be? [text/voice]")
             msg = await self.bot.wait_for("message", check=check_chnl_type)
-            if msg.content.lower() == "t" or msg.content.lower() == "tc" or msg.content.lower() == "text" or msg.content.lower() == "text channel":
+            if msg.content.lower() == "t" or msg.content.lower() == "tc" or msg.content.lower() == "text" \
+                or msg.content.lower() == "text channel":
                 file_pointer.write("tc:".encode('utf-8'))
-            elif msg.content.lower() == "v" or msg.content.lower() == "vc" or msg.content.lower() == "voice" or msg.content.lower() == "voice channel":
+            elif msg.content.lower() == "v" or msg.content.lower() == "vc" or msg.content.lower() == "voice" \
+                or msg.content.lower() == "voice channel":
                 file_pointer.write("vc:".encode('utf-8'))
             await ctx.send("What name would you like this channel to have?")
             msg = await self.bot.wait_for("message", check=check_chnl_cont)
@@ -226,9 +232,11 @@ class Gmaker(commands.Cog):
             # send file to user and cleanup
             fp.close()
             try:
-                await ctx.author.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+                await ctx.author.send(file=discord.File(fp=f"{des_filename}.txt"), \
+                    content="Process complete. Here is your \"gmake\" text file.")
             except discord.Forbidden:
-                await ctx.channel.send(file=discord.File(fp=f"{des_filename}.txt"), content="Process complete. Here is your \"gmake\" text file.")
+                await ctx.channel.send(file=discord.File(fp=f"{des_filename}.txt"), \
+                    content="Process complete. Here is your \"gmake\" text file.")
             os.unlink(fp.name)
         except asyncio.TimeoutError:
             # clean up on communication failure

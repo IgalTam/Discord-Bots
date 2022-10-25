@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 class Cmdutils(commands.Cog):
+    """general utility commands"""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
