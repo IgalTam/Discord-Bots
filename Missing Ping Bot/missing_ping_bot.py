@@ -260,7 +260,7 @@ async def gsp(ctx, guild_name=None):
         return
 
     # get guild icon
-    await ctx.send(guild.icon_url)
+    await ctx.send(guild.icon)
 
 @bot.command()
 async def go_offline(ctx):
