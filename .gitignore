@@ -8,3 +8,6 @@ __pycache__/
 *.idea/
 *.xml
 Hunter\ Bot/keep_alive.py
+gmaker_tests/
+gmaker_tests/*.txt
+testgmake*.txt
