@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from discord import colour as color
 import getopt
 import os
+from keep_alive import keep_alive
 
 load_dotenv()
 
@@ -35,4 +36,5 @@ async def on_ready():
     print("bot ready")
 
 if __name__ == "__main__":
+    # keep_alive()
     bot.run(DISCORD_TOKEN)
