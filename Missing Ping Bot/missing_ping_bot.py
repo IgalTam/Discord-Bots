@@ -1,132 +1,96 @@
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv  
-import youtube_dl
+from dotenv import load_dotenv
 import asyncio
 import random
 from bot_gen_utils import *
+import botaudioutils
+import os
 
 load_dotenv()
 
 DISCORD_TOKEN = 'OTM0MjY2ODM5NzQ2MzU1Mjkw.YetlzA.wDVSV0W0T8d98MCiaG0wfIwSqv8'
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='?', intents=intents, status=discord.Status.offline)
-bot.delay = True  # global boolean for auto mode
 
-youtube_dl.utils.bugs_reports_message = lambda: ''
-
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
-
-ffmpeg_options = {
-    'options': '-vn'
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = ""
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-        filename = data['title'] if stream else ytdl.prepare_filename(data)
-        # return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-        return filename
-
-
-@bot.command(name='join_channel', help='just join')
-async def join_channel(ctx, guild_name=None, usr=None, chnl=None):
-    # establish which guild to operate in
-    guild = None
-    if guild_name is None:
-        guild = ctx.message.guild
-    else:
-        for guild_y in bot.guilds:
-            if guild_y.name == guild_name:
-                guild = guild_y
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.all()
+        intents.message_content = True
+        super().__init__(command_prefix="?", intents=intents,\
+             status=discord.Status.offline)
     
-    # find channel, if specified
-    channel = None
-    if chnl is not None:
-        for chnl_y in guild.channels:
-            pass
+    async def setup_hook(self) -> None:
+        for filename in os.listdir('./Missing Ping Bot/cogs'):
+            if filename.endswith('.py'):
+                await self.load_extension(f'cogs.{filename[:-3]}')
+        await self.tree.sync()
+        print(f"Synced slash commands for {self.user}.")
 
-    # find user object
-    user = None
-    if usr is None:
-        user = ctx.author
-    else:
-        for member in guild.members:
-            if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
-                user = member
+    async def on_command_error(self, ctx, error):
+        await ctx.reply(error, ephemeral=True)
 
-    # connect to channel
-    if channel is None:
-        channel = user.voice.channel
-    await channel.connect()
+bot = Bot()
 
+# @bot.command(name='join_channel', help='just join')
+# async def join_channel(ctx, guild_name=None, usr=None, chnl=None):
+#     # establish which guild to operate in
+#     guild = guild_find(ctx, bot, guild_name)
+    
+#     # find channel, if specified
+#     channel = None
+#     if chnl is not None:
+#         for chnl_y in guild.channels:
+#             pass
 
-@bot.command()
-async def start_record(ctx, usr, guild_name=None):
-    await ctx.author.voice.channel.connect()  # Connect to the voice channel of the author
-    ctx.voice_client.start_recording(discord.sinks.MP3Sink(), finished_callback, ctx, usr, guild_name)
-    await ctx.respond("Initiating surveillance")
+#     # find user object
+#     user = user_find(ctx, guild, usr)
 
-
-async def finished_callback(sink, ctx, usr, guild_name):
-    # establish which guild to operate in
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
-
-    # find user object
-    user = None
-    if usr is None:
-        user = ctx.author
-    else:
-        for member in guild.members:
-            if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
-                user = member
-
-    # Here you can access the recorded files:
-    recorded_users = [
-        f"<@{user_id}>"
-        for user_id, audio in sink.audio_data.items()
-    ]
-    for rec in sink.audio_data.items():
-        if rec.user_id == user.id:
-            await user.voice.channel.connect()
-            async with ctx.typing():
-                guild.voice_client.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=audio))
-    files = [discord.File(audio.file, f"{user_id}.{sink.encoding}") for user_id, audio in sink.audio_data.items()]
-    await ctx.channel.send(f"Recorded audio for {', '.join(recorded_users)}.", files=files)
+#     # connect to channel
+#     if channel is None:
+#         channel = user.voice.channel
+#     await channel.connect()
 
 
-@bot.command()
-async def stop_recording(ctx):
-    ctx.voice_client.stop_recording()  # Stop the recording, finished_callback will shortly after be called
-    await ctx.respond("Terminating surveillance")
+# @bot.command()
+# async def start_record(ctx, usr, guild_name=None):
+#     await ctx.author.voice.channel.connect()  # Connect to the voice channel of the author
+#     ctx.voice_client.start_recording(discord.sinks.MP3Sink(), finished_callback, ctx, usr, guild_name)
+#     await ctx.respond("Initiating surveillance")
+
+
+# async def finished_callback(sink, ctx, usr, guild_name):
+#     # establish which guild to operate in
+#     guild = guild_find(ctx, bot, guild_name)
+#     if guild is None:
+#         await ctx.send("Could not find server.")
+#         return
+
+#     # find user object
+#     user = None
+#     if usr is None:
+#         user = ctx.author
+#     else:
+#         for member in guild.members:
+#             if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
+#                 user = member
+
+#     # Here you can access the recorded files:
+#     recorded_users = [
+#         f"<@{user_id}>"
+#         for user_id, audio in sink.audio_data.items()
+#     ]
+#     for rec in sink.audio_data.items():
+#         if rec.user_id == user.id:
+#             await user.voice.channel.connect()
+#             async with ctx.typing():
+#                 guild.voice_client.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=audio))
+#     files = [discord.File(audio.file, f"{user_id}.{sink.encoding}") for user_id, audio in sink.audio_data.items()]
+#     await ctx.channel.send(f"Recorded audio for {', '.join(recorded_users)}.", files=files)
+
+
+# @bot.command()
+# async def stop_recording(ctx):
+#     ctx.voice_client.stop_recording()  # Stop the recording, finished_callback will shortly after be called
+#     await ctx.respond("Terminating surveillance")
 
 
 @bot.command()
@@ -144,18 +108,18 @@ async def get_stream_info(ctx, usr, guild_name=None):
     print(user.voice.self_stream)
 
 
-@bot.command(name='leave_channel', help='just leave')
-async def leave_channel(ctx, guild_name=None):
-    """disconnect from connected channel"""
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
-    try:
-        voice_channel = guild.voice_client
-        await voice_channel.disconnect()
-    except AttributeError:
-        await ctx.send("Not connected to voice channel")
+# @bot.command(name='leave_channel', help='just leave')
+# async def leave_channel(ctx, guild_name=None):
+#     """disconnect from connected channel"""
+#     guild = guild_find(ctx, bot, guild_name)
+#     if guild is None:
+#         await ctx.send("Could not find server.")
+#         return
+#     try:
+#         voice_channel = guild.voice_client
+#         await voice_channel.disconnect()
+#     except AttributeError:
+#         await ctx.send("Not connected to voice channel")
 
 
 @bot.command(name='mp', help='Play missing ping')
@@ -184,7 +148,7 @@ async def mp(ctx, guild_name=None, usr=None):
     try:
 
         async with ctx.typing():
-            filename = await YTDLSource.from_url('https://www.youtube.com/watch?v=T6dvKYZ7enU', loop=bot.loop)
+            filename = await botaudioutils.YTDLSource.from_url('https://www.youtube.com/watch?v=T6dvKYZ7enU', loop=bot.loop)
             voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
         await asyncio.sleep(1)
         await voice_channel.disconnect()
@@ -297,24 +261,24 @@ async def on_message(msg):
     await bot.process_commands(msg)
 
 
-async def find_guild_user(ctx, guild_name=None, usr=None):
-    """finds user and guild to operate in"""
-    # establish which guild to operate in
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
+# async def find_guild_user(ctx, guild_name=None, usr=None):
+#     """finds user and guild to operate in"""
+#     # establish which guild to operate in
+#     guild = guild_find(ctx, bot, guild_name)
+#     if guild is None:
+#         await ctx.send("Could not find server.")
+#         return
 
-    # find user if not None
-    user = None
-    if usr is None:
-        user = ctx.author
-    else:
-        for member in guild.members:
-            if member.name == usr or member.nick == usr and member.id != guild.me.id:
-                user = member
+    # # find user if not None
+    # user = None
+    # if usr is None:
+    #     user = ctx.author
+    # else:
+    #     for member in guild.members:
+    #         if member.name == usr or member.nick == usr and member.id != guild.me.id:
+    #             user = member
 
-    return guild, user
+    # return guild, user
 
 
 @bot.command(name='play_audio_rem', help='a')
@@ -341,7 +305,7 @@ async def play_audio_rem(ctx, dur, guild_name=None, usr=None):
     try:
         voice_channel = guild.voice_client
         async with ctx.typing():
-            filename = await YTDLSource.from_url("https://www.youtube.com/watch?v=G-ogxxcSZhM", loop=bot.loop)
+            filename = await botaudioutils.YTDLSource.from_url("https://www.youtube.com/watch?v=G-ogxxcSZhM", loop=bot.loop)
             voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
         await asyncio.sleep(int(dur))
         await voice_channel.disconnect()

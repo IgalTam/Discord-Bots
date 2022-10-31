@@ -1,6 +1,5 @@
 """general use commands used by multiple bots"""
 
-import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -14,3 +13,14 @@ def guild_find(ctx, bot, guild_name):
             if guild_y.name == guild_name:
                 return guild_y
         return None
+
+def user_find(ctx: commands.Context, guild: discord.Guild, usr):
+    """returns member object from guild"""
+    user = None
+    if usr is None:
+        user = ctx.author
+    else:
+        for member in guild.members:
+            if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
+                user = member
+    return user

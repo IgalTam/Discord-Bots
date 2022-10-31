@@ -8,3 +8,5 @@ __pycache__/
 *.idea/
 *.xml
 Hunter\ Bot/keep_alive.py
+discord_bots/
+gmaker_tests/
