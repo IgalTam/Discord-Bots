@@ -10,6 +10,7 @@ import os
 load_dotenv()
 
 DISCORD_TOKEN = 'OTM0MjY2ODM5NzQ2MzU1Mjkw.YetlzA.wDVSV0W0T8d98MCiaG0wfIwSqv8'
+FFMPEG_PATH = "C:/FFmpeg/bin/ffmpeg.exe" # set this to wherever your ffmpeg.exe is stored
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -30,100 +31,9 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-# @bot.command(name='join_channel', help='just join')
-# async def join_channel(ctx, guild_name=None, usr=None, chnl=None):
-#     # establish which guild to operate in
-#     guild = guild_find(ctx, bot, guild_name)
-    
-#     # find channel, if specified
-#     channel = None
-#     if chnl is not None:
-#         for chnl_y in guild.channels:
-#             pass
 
-#     # find user object
-#     user = user_find(ctx, guild, usr)
-
-#     # connect to channel
-#     if channel is None:
-#         channel = user.voice.channel
-#     await channel.connect()
-
-
-# @bot.command()
-# async def start_record(ctx, usr, guild_name=None):
-#     await ctx.author.voice.channel.connect()  # Connect to the voice channel of the author
-#     ctx.voice_client.start_recording(discord.sinks.MP3Sink(), finished_callback, ctx, usr, guild_name)
-#     await ctx.respond("Initiating surveillance")
-
-
-# async def finished_callback(sink, ctx, usr, guild_name):
-#     # establish which guild to operate in
-#     guild = guild_find(ctx, bot, guild_name)
-#     if guild is None:
-#         await ctx.send("Could not find server.")
-#         return
-
-#     # find user object
-#     user = None
-#     if usr is None:
-#         user = ctx.author
-#     else:
-#         for member in guild.members:
-#             if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
-#                 user = member
-
-#     # Here you can access the recorded files:
-#     recorded_users = [
-#         f"<@{user_id}>"
-#         for user_id, audio in sink.audio_data.items()
-#     ]
-#     for rec in sink.audio_data.items():
-#         if rec.user_id == user.id:
-#             await user.voice.channel.connect()
-#             async with ctx.typing():
-#                 guild.voice_client.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=audio))
-#     files = [discord.File(audio.file, f"{user_id}.{sink.encoding}") for user_id, audio in sink.audio_data.items()]
-#     await ctx.channel.send(f"Recorded audio for {', '.join(recorded_users)}.", files=files)
-
-
-# @bot.command()
-# async def stop_recording(ctx):
-#     ctx.voice_client.stop_recording()  # Stop the recording, finished_callback will shortly after be called
-#     await ctx.respond("Terminating surveillance")
-
-
-@bot.command()
-async def get_stream_info(ctx, usr, guild_name=None):
-    """get streaming info"""
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
-
-    for member in guild.members:
-        if (member.name == usr or member.nick == usr) and member.id != guild.me.id:
-            user = member
-
-    print(user.voice.self_stream)
-
-
-# @bot.command(name='leave_channel', help='just leave')
-# async def leave_channel(ctx, guild_name=None):
-#     """disconnect from connected channel"""
-#     guild = guild_find(ctx, bot, guild_name)
-#     if guild is None:
-#         await ctx.send("Could not find server.")
-#         return
-#     try:
-#         voice_channel = guild.voice_client
-#         await voice_channel.disconnect()
-#     except AttributeError:
-#         await ctx.send("Not connected to voice channel")
-
-
-@bot.command(name='mp', help='Play missing ping')
-async def mp(ctx, guild_name=None, usr=None):
+@bot.hybrid_command(name='mp', with_app_command=True, description='Play missing ping')
+async def mp(ctx: commands.Context, guild_name=None, usr=None):
     """plays missing ping in the channel usr is currently in"""
 
     # credit for missing pings: https://www.youtube.com/watch?v=T6dvKYZ7enU
@@ -134,26 +44,21 @@ async def mp(ctx, guild_name=None, usr=None):
         return
 
     # find user if not None
-    user = None
-    if usr is None:
-        user = ctx.author
-    else:
-        for member in guild.members:
-            if member.name == usr or member.nick == usr and member.id != guild.me.id:
-                user = member
-    await safety_disconnect(ctx, guild)
-    channel = user.voice.channel
-    await channel.connect()
-    voice_channel = guild.voice_client
-    try:
+    user = user_find(ctx, guild, usr)
 
+    if guild.me.voice:
+        await safety_disconnect(ctx, guild)
+    try:
+        await user.voice.channel.connect()
+        voice_channel = guild.voice_client
         async with ctx.typing():
             filename = await botaudioutils.YTDLSource.from_url('https://www.youtube.com/watch?v=T6dvKYZ7enU', loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
+            voice_channel.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=filename))
         await asyncio.sleep(1)
         await voice_channel.disconnect()
-    except:
-        await ctx.send("The bot is not connected to a voice channel.")
+        await ctx.send("Operation successful.")
+    except AttributeError:
+        await ctx.send("Guild or user not found.")
 
 
 async def safety_disconnect(ctx, guild_name):
@@ -173,8 +78,8 @@ async def safety_disconnect(ctx, guild_name):
         pass
 
 
-@bot.command()
-async def gb(ctx, usr, guild_name=None):
+@bot.hybrid_command(name="gb", with_app_command=True, description="impersonate someone in a guild")
+async def gb(ctx: commands.Context, usr, guild_name=None):
     """impersonate someone in a guild"""
 
     # establish which guild to operate in
@@ -184,21 +89,23 @@ async def gb(ctx, usr, guild_name=None):
         return
 
     # find and impersonate usr
-    for user in guild.members:
-        if (str(user)[:len(str(user))-5] == usr or user.nick == usr) and user.id != guild.me.id:
-            await guild.me.edit(nick=user.nick)
-            ret_img = user.avatar
-            mod_img = await ret_img.read()
-            if user.activity is None:
-                await bot.change_presence(activity=None, status=guild.me.status)
-            else:
-                await bot.change_presence(activity=discord.Activity(type=user.activity.type, name=user.activity.name))
-            await bot.user.edit(avatar=mod_img)
-            await ctx.send("impersonation initiated")
+    user = user_find(ctx, guild, usr)
+    if user.nick:
+        await guild.me.edit(nick=user.nick)
+    else:
+        await guild.me.edit(nick=user.name)
+    ret_img = user.avatar
+    mod_img = await ret_img.read()
+    if user.activity is None:
+        await bot.change_presence(activity=None, status=guild.me.status)
+    else:
+        await bot.change_presence(activity=discord.Activity(type=user.activity.type, name=user.activity.name))
+    await bot.user.edit(avatar=mod_img)
+    await ctx.send("impersonation initiated")
 
 
-@bot.command()
-async def gpp(ctx, usr, guild_name=None):
+@bot.hybrid_command(name="gpp", with_app_command=True, desc="get a guild member's icon")
+async def gpp(ctx: commands.Context, usr,  usr_obj: discord.Member, guild_name=None):
     """gets avatar of member in a guild"""
 
     # establish which guild to operate in
@@ -208,40 +115,34 @@ async def gpp(ctx, usr, guild_name=None):
         return
     
     # get avatar of user
-    for user in guild.members:
-        if (user.name == usr or user.nick == usr) and user.id != guild.me.id:
-            await ctx.send(user.avatar_url_as())
+    await ctx.send(user_find(ctx, guild, usr).avatar)
+    await ctx.send(usr_obj.avatar)
 
 
-@bot.command()
-async def gsp(ctx, guild_name=None):
+@bot.hybrid_command(name="gsp", with_app_command=True, desc="get a guild's icon")
+async def gsp(ctx: commands.Context, guild: discord.Guild):
     """gets guild icon"""
-
-    # establish which guild to operate in
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
-
-    # get guild icon
     await ctx.send(guild.icon)
 
-@bot.command()
-async def go_offline(ctx):
+
+@bot.hybrid_command(name="go_offline", with_app_command=True,\
+     description="set status to offline/invisible")
+async def go_offline(ctx: commands.Context):
     """set status to offline/invisible"""
     await bot.change_presence(status=discord.Status.offline)
     await ctx.send("going dark")
 
 
-@bot.command()
-async def go_online(ctx):
+@bot.hybrid_command(name="go_online", with_app_command=True,\
+     description="set status to online")
+async def go_online(ctx: commands.Context):
     """set status to online"""
     await bot.change_presence(status=discord.Status.online)
     await ctx.send("going light")
 
 
 @bot.event
-async def on_message(msg):
+async def on_message(msg: discord.Message):
     msg_flag = random.randint(1, 100)
     if isinstance(msg.channel, discord.channel.DMChannel) and msg.author != bot.user:
         if msg_flag % 6 == 0:
@@ -261,66 +162,9 @@ async def on_message(msg):
     await bot.process_commands(msg)
 
 
-# async def find_guild_user(ctx, guild_name=None, usr=None):
-#     """finds user and guild to operate in"""
-#     # establish which guild to operate in
-#     guild = guild_find(ctx, bot, guild_name)
-#     if guild is None:
-#         await ctx.send("Could not find server.")
-#         return
-
-    # # find user if not None
-    # user = None
-    # if usr is None:
-    #     user = ctx.author
-    # else:
-    #     for member in guild.members:
-    #         if member.name == usr or member.nick == usr and member.id != guild.me.id:
-    #             user = member
-
-    # return guild, user
-
-
-@bot.command(name='play_audio_rem', help='a')
-async def play_audio_rem(ctx, dur, guild_name=None, usr=None):
-    await safety_disconnect(ctx, guild_name)
-    # establish which guild to operate in
-    guild = guild_find(ctx, bot, guild_name)
-    if guild is None:
-        await ctx.send("Could not find server.")
-        return
-
-    # find user if not None
-    user = None
-    if usr is None:
-        user = ctx.author
-    else:
-        for member in guild.members:
-            if member.name == usr or member.nick == usr and member.id != guild.me.id:
-                user = member
-
-    # must hard code url in for now
-    channel = user.voice.channel
-    await channel.connect()
-    try:
-        voice_channel = guild.voice_client
-        async with ctx.typing():
-            filename = await botaudioutils.YTDLSource.from_url("https://www.youtube.com/watch?v=G-ogxxcSZhM", loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
-        await asyncio.sleep(int(dur))
-        await voice_channel.disconnect()
-    except:
-        await ctx.send("The bot is not connected to a voice channel.")
-
-
 @bot.event
 async def on_ready():
     print("bot ready")
-
-
-@bot.command(name='ping', help='pingpong')
-async def ping(ctx):
-    await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 
 
 if __name__ == "__main__":
