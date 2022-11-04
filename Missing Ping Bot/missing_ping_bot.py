@@ -105,7 +105,7 @@ async def gb(ctx: commands.Context, usr, guild_name=None):
 
 
 @bot.hybrid_command(name="gpp", with_app_command=True, desc="get a guild member's icon")
-async def gpp(ctx: commands.Context, usr,  usr_obj: discord.Member, guild_name=None):
+async def gpp(ctx: commands.Context, usr,  guild_name=None):
     """gets avatar of member in a guild"""
 
     # establish which guild to operate in
@@ -115,9 +115,10 @@ async def gpp(ctx: commands.Context, usr,  usr_obj: discord.Member, guild_name=N
         return
     
     # get avatar of user
-    await ctx.send(user_find(ctx, guild, usr).avatar)
-    await ctx.send(usr_obj.avatar)
-
+    try:
+        await ctx.send(user_find(ctx, guild, usr).avatar)
+    except AttributeError:
+        await ctx.send(f"Could not find a user named {usr}.")
 
 @bot.hybrid_command(name="gsp", with_app_command=True, desc="get a guild's icon")
 async def gsp(ctx: commands.Context, guild: discord.Guild):
