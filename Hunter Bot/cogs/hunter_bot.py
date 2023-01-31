@@ -1,4 +1,5 @@
-from bot_gen_utils import guild_find
+from bot_gen_utils import *
+from config import HUNTER2_LNK
 import discord
 from discord.ext import commands
 import random
@@ -6,7 +7,7 @@ import asyncio
 import botaudioutils
 import bot_gen_utils
 
-MK2_LINK = 'https://discord.com/api/oauth2/authorize?client_id=869147082429194270&permissions=8&scope=bot'
+MK2_LINK = HUNTER2_LNK # set this invite link in your config.py file
 
 class HunterBot(commands.Cog):
 
@@ -81,7 +82,7 @@ class HunterBot(commands.Cog):
 
     @commands.hybrid_command(name='dw', with_app_command=True, description='secret')
     @commands.has_permissions(administrator=True)
-    async def dw(self, ctx: commands.Context, dur=10, guild_name=None):
+    async def dw(self, ctx: commands.Context, dur=30, guild_name=None):
         """disables welcome message on guild join for dur seconds"""
         guild = guild_find(ctx, self.bot, guild_name)
         sys_flags = guild.system_channel_flags # get current system flags of guild
@@ -94,6 +95,7 @@ class HunterBot(commands.Cog):
         await guild.edit(system_channel_flags=sys_flags) # restore guild notif. flag
         await ctx.send(f"welcome messages in guild {guild.name} re-enabled")
 
+
     @commands.command(name="safety_disconnect")
     async def safety_disconnect(self, ctx: commands.Context):
         """disconnect bot if it is in a channel"""
@@ -103,5 +105,25 @@ class HunterBot(commands.Cog):
         except:
             await ctx.send("Safety disconnect failed.")
 
-async def setup(bot):
+
+    @commands.hybrid_command(name="jchl_spec", with_app_command=True,\
+        description="join channel of specific user in specific guild")
+    async def jchl_spec(self, ctx:commands.Context, usr=None, guild_name=None):
+
+        # establish which guild to operate in
+        guild = guild_find(ctx, self.bot, guild_name)
+        if guild is None:
+            await ctx.send("Could not find server.")
+            return
+
+        # establish which user to target
+        user = user_find(ctx, guild, usr)
+        if user is None:
+            await ctx.send("Could not find user.")
+            return
+
+        await user.voice.channel.connect()
+        await ctx.send(f'connected to {usr} in {guild_name}')
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(HunterBot(bot))
