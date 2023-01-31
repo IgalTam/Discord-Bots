@@ -1,10 +1,11 @@
 """general use commands used by multiple bots"""
 
+import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-def guild_find(ctx, bot, guild_name):
+def guild_find(ctx: commands.Context, bot, guild_name) -> discord.Guild:
     """returns guild object associated with guild_name, return None on fail"""
     if guild_name is None:
         return ctx.message.guild
