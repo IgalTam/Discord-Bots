@@ -12,3 +12,4 @@ gmaker_tests/
 gmaker_tests/*.txt
 testgmake*.txt
 discord_bots/
+discord_bots_outgoing.zip
