@@ -31,37 +31,6 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-@bot.hybrid_command(name="rle", with_app_command=True,\
-    description="reload extension")
-async def rle(ctx, filename):
-    await bot.reload_extension(f'cogs.{filename[:-3]}')
-
-
-@bot.event
-async def on_message(message):
-    if "zHunter Bot MkII" in message.content:
-        await message.delete()
-    for member in message.mentions:
-        if member.name == "zHunter Bot MkII":
-            await message.delete()
-    await bot.process_commands(message)
-
-
-async def safety_disconnect(ctx: commands.Context):
-    """disconnect bot if it is in a channel"""
-    voice_client = ctx.message.guild.voice_client
-    try:
-        await voice_client.disconnect()
-    except:
-        await ctx.send("Safety disconnect failed.")
-
-
-@bot.command()
-async def get_system_flags(ctx: commands.Context):
-    """gets system channel flags of guild"""
-    await ctx.send(ctx.message.guild.system_channel_flags)
-    await ctx.send(ctx.message.guild.system_channel_flags.join_notifications)
-
 
 @bot.event
 async def on_ready():
