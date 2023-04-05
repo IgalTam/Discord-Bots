@@ -11,7 +11,5 @@ Github containing my various Discord bot programs. Python-based scripts develope
    c) Check the README in the directory of an individual bot for any additional packages to be installed
 
 ##### To use the bot code for yourself, complete the following:
-1) In the directories of the bots you want to use, create a file called ```config.py``` and include a macro that matches the one in the main file of the corresponding bot. 
-  a) For instance, to use the Hunter Bot, in the directory ```Hunter Bot/```, create a file ```config.py``` that contains the line ```HUNTER = <your application token string>```.
-  b) Check the README in the directory of an individual bot for any additional dependencies to be included in the bot's ```config.py``` file.
+1) In the directories of the bots you want to use, create a file called ```config.py``` and include a macro that matches the one in the main file of the corresponding bot. For instance, to use the Hunter Bot, in the directory ```Hunter Bot/```, create a file ```config.py``` that contains the line ```HUNTER = <your application token string>```. Check the README in the directory of an individual bot for any additional dependencies to be included in the bot's ```config.py``` file.
   
