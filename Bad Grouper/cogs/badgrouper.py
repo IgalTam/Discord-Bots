@@ -327,7 +327,8 @@ class BadGrouper(commands.Cog):
             await ctx.send("End of mult.")
 
 
-    @commands.command(name='mult_help', help='explains mult (think Unix man pages)')
+    @commands.hybrid_command(name="mult_help", with_app_command=True, description="explains mult (think Unix man pages)")
+    @commands.has_permissions(administrator=True)
     async def mult_help(self, ctx: commands.Context):
         """essentially a man page for mult"""
         await ctx.send("mult -r [name='BG_Group_'] -R [name] -A -m [name='BG_Group_'] -M [count] -c [name='BG_Group_'] "
