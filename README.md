@@ -23,7 +23,7 @@ Github containing my various Discord bot programs. Python-based scripts develope
 *Some bots are programmed with one or more utilities that are not compatible with slash commands. These must be run using standard prefix syntax, and are noted in individual project READMEs.
 
 ##### Common Modules
-Most of my bot programs make use of common files containing several general purpose functions. As of the last update to this README, these files are ```bot_gen_utils.py``` (commonly used functions), ```botaudioutils.py``` (defines the Youtube_DL class used for audio-based bots), and the ```cmd_utils.py``` cog (useful user commands for bots to support). Here is a brief description of the functions and commands in ```bot_gen_utils.py``` and ```cmd_utils.py```:<br />
+Most of my bot programs make use of common files containing several general purpose functions. As of the last update to this README, these files are ```bot_gen_utils.py``` (commonly used functions), ```botaudioutils.py``` (defines the Youtube_DL class used for audio-based bots), and the ```cmd_utils.py``` cog (useful user commands for bots to support). Here is a brief description of the functions and commands in ```bot_gen_utils.py``` and ```cmd_utils.py```:<br /><br />
 __bot_gen_utils.py (functions)__<br />
 ```guild_find()```: Returns a discord.Guild object associated with the input guild name if the bot is a member of that guild<br />
 ```user_find()```: Returns a discord.Member object associated with the input username for a user who is a member of the input guild<br /><br />
