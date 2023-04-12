@@ -9,7 +9,7 @@ This bot was originally designed to emulate the behavior of the Hunter Bot, but 
 
 ### Command List
 
-###### Main Suite (impersonator.py)
+##### Main Suite (impersonator.py)
 ```mp [guildn] [usrn]```: Aside from the audio played, parallels the functionality of the Hunter Bot's ```play_scrm``` command.<br />
 ```gb <usrn> [guildn]```: Impersonates the user _usrn_ in the guild _guildn_ as described in the Overview. If not provided, _guildn_ defaults to the calling message's guild.<br />
 ```sd [guildn]```: Resets the bot to its default appearance in the guild _guildn_. If not provided, _guildn_ defaults to the calling message's guild.<br />
