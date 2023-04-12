@@ -39,7 +39,7 @@ async def votetimeout(ctx: commands.Context, kicked: discord.Member, timeout_dur
     if kicked is None:
         return await ctx.send(f"{kicked_name} is not a member of this server.")
     if kicked.id == OP_ID and MAINT_FLAG is True:
-        await ctx.send(f"{kicked_name} is attempting to fix me, stop interrupting")
+        await ctx.send(f"{kicked_name} is attempting to fix me, stop interrupting.")
     else:
         await ctx.send(f"Timeout for {kicked_name} is now pending.")
         result = await vote(ctx, timer)
@@ -62,7 +62,7 @@ async def votekick(ctx: commands.Context, kicked: discord.Member, timer=30.0):
     if kicked_name is None:
         return await ctx.send(f"{kicked_name} is not a member of this server.")
     elif kicked.id == OP_ID and MAINT_FLAG is True:
-        await ctx.send(f"{kicked_name} is attempting to fix me, stop interrupting")
+        await ctx.send(f"{kicked_name} is attempting to fix me, stop interrupting.")
     elif kicked.voice is None:
         print("no voice")
         await ctx.send(f"{kicked_name} is not connected to a voice channel.")

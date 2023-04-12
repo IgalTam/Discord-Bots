@@ -18,8 +18,8 @@ Github containing my various Discord bot programs. Python-based scripts develope
 3) The config files for audio-based bots should contain a ```FFMPEG_PATH``` macro definition for the absolute path to your local ```ffmpeg.exe``` file.
 
 ##### Other Notes
-1) The active projects use Cogs for modularization, so feel free to create a bot with combined functionalities of my bots.
-2) The active projects support Hybrid commands, so using those bots' commands can be done either with their prefixes or with [slash commands](https://support.discord.com/hc/en-us/articles/1500000368501-Slash-Commands-FAQ). The slash command menu for applicable bots contains a *full list of commands, each of which has a short description and fillable parameters.<br /><br />
+1) Most of the active projects use Cogs for modularization, so feel free to create a bot with combined functionalities of my bots.
+2) Most of the active projects support Hybrid commands, so using those bots' commands can be done either with their prefixes or with [slash commands](https://support.discord.com/hc/en-us/articles/1500000368501-Slash-Commands-FAQ). The slash command menu for applicable bots contains a *full list of commands, each of which has a short description and fillable parameters.<br /><br />
 *Some bots are programmed with one or more utilities that are not compatible with slash commands. These must be run using standard prefix syntax, and are noted in individual project READMEs.
 
 ##### Common Modules
@@ -31,3 +31,11 @@ __cmd_utils.py (commands)__<br />
 ```ping```: Pings the bot, which responds with the latency of the request<br />
 ```jchl```: The bot joins the message author's voice channel<br />
 ```lchl```: The bot leaves thea voice channel in the message's guild of origin to which it is already connected
+
+##### Bot Access Token Macros (Active Projects)
+As referred to earlier, each bot is programmed to import its access token from a macro in the corresponding ```config.py``` file. Here are the access macros of the active projects for reference:<br />
+1) Bad Grouper: ```BAD_GRPR```
+2) Hunter Bot: ```HUNTER ``` (as referenced earlier)
+3) Hunter Bot MkII: ```HUNTER2```
+4) Impersonator Bot: ```IMPERS```
+5) Vote Kicker: ```VOTEKICK```

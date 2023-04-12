@@ -2,13 +2,14 @@ import os
 import random
 import discord
 from discord.ext import commands
+from Old.config import BANNER
 
 intents = discord.Intents.default()
 intents.members = True
 
 client = commands.Bot(command_prefix='b!', intents=intents)
 
-DISCORD_TOKEN = 'OTQwODU2ODAxMzk2NjcwNDk0.YgNfLQ.Q5498pYclWbhNb-Y9AmvAoxiEZI'
+DISCORD_TOKEN = BANNER
 
 
 @client.event

@@ -4,19 +4,19 @@ import asyncio
 import random
 from bot_gen_utils import *
 import botaudioutils
-from config import MISSPING_IMG_PATH
+from config import DEF_PFP_PATH
 
 FFMPEG_PATH = "C:/FFmpeg/bin/ffmpeg.exe" # set this to wherever your ffmpeg.exe is stored
 
-class MissingPingBot(commands.Cog):
-    """main set of commands for Missing Ping Bot"""
+class Impersonator(commands.Cog):
+    """main set of commands for Impersonator Bot"""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Missing Ping Bot Cog loaded.")
+        print("Impersonator Bot Cog loaded.")
 
 
     @commands.hybrid_command(name='mp', with_app_command=True, description='Play missing ping')
@@ -106,7 +106,7 @@ class MissingPingBot(commands.Cog):
         await self.bot.change_presence(activity=None, status=guild.me.status)
 
         # convert image into bytes, then store as avatar
-        with open(MISSPING_IMG_PATH, 'rb') as image:
+        with open(DEF_PFP_PATH, 'rb') as image:
             print("opened file")
             await self.bot.user.edit(avatar=bytearray(image.read()))
             await ctx.send("reverted to default")
@@ -193,4 +193,4 @@ class MissingPingBot(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(MissingPingBot(bot))
+    await bot.add_cog(Impersonator(bot))

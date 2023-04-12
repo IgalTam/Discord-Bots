@@ -4,11 +4,13 @@ from dotenv import load_dotenv
 from linked_list import Node
 from queues import QueueLinked
 import youtube_dl
+import asyncio
 import queue
+from config import BAD_ALEXA
 
 load_dotenv()
 
-DISCORD_TOKEN = 'ODkwMDY0Mjk3ODczNTIyNzE4.YUqW-Q.RjMT6Kiag_56uQvvM-97bT5tF0U'
+DISCORD_TOKEN = BAD_ALEXA
 
 bot = commands.Bot(command_prefix='!')
 music_queue = None

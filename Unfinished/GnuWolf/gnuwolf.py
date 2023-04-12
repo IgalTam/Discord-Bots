@@ -5,11 +5,11 @@ import os
 from dotenv import load_dotenv
 import gnuwolfutil
 from gnuwolfutil import math
+from config import GNUWOLF
 
 load_dotenv()
 
-DISCORD_TOKEN = 'MTAyOTEwNzQyOTg4NTEwMDE0Mg.G3104U.yGWrRNAnIVnlmjMHZqecE_45tLL-2prZnbe-sg'
-# test server id: 528651756201050113
+DISCORD_TOKEN = GNUWOLF
 
 class Bot(commands.Bot):
     def __init__(self):

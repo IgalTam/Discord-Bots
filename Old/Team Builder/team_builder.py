@@ -1,10 +1,11 @@
 from discord.ext import commands
 from dotenv import load_dotenv
 import random
+from Old.config import TB
 
 load_dotenv()
 
-DISCORD_TOKEN = 'OTE2OTM2Njg1NDk1OTMwODgw.YaxZ1Q.AvJc0NNPEdJcNbLiVFxaBdZDCIk'
+DISCORD_TOKEN = TB
 
 bot = commands.Bot(command_prefix='%')
 bot.delay = True  # global boolean for auto mode

@@ -3,10 +3,12 @@ from discord.ext.commands import Bot
 from dotenv import load_dotenv
 import time
 import youtube_dl
+import asyncio
+from Old.config import GREETER
 
 load_dotenv()
 
-DISCORD_TOKEN = 'ODY5ODE4MTY4ODQ2MjE3MjQ2.YQDvSw.rKIh2xobWN0UiVMhRfnsBEqSaHQ'
+DISCORD_TOKEN = GREETER
 
 client = discord.Client()
 bot = Bot(command_prefix='|3')

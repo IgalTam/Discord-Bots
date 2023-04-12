@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from config import MISSPING
+from config import IMPERS
 from bot_gen_utils import *
 import os
 
 load_dotenv()
 
-DISCORD_TOKEN = MISSPING
+DISCORD_TOKEN = IMPERS
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -17,7 +17,7 @@ class Bot(commands.Bot):
              status=discord.Status.offline)
     
     async def setup_hook(self) -> None:
-        for filename in os.listdir('./Missing Ping Bot/cogs'):
+        for filename in os.listdir('./Impersonator Bot/cogs'):
             if filename.endswith('.py'):
                 await self.load_extension(f'cogs.{filename[:-3]}')
         await self.tree.sync()
