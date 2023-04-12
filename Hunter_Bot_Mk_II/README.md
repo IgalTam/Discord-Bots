@@ -5,3 +5,5 @@ The Hunter Bot MkII is a follow up implementation to the original Hunter Bot, an
 
 ### Special Notes
 1) To optimize operational efficiency, the MkII does not support hybrid commands and does not use Cog-based modularization.
+
+### Command List

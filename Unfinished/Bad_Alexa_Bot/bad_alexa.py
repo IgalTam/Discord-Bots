@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from linked_list import Node
 from queues import QueueLinked
 import youtube_dl
+import queue
 
 load_dotenv()
 

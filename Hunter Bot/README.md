@@ -5,3 +5,5 @@ This is a prank bot designed for jumpscaring voice channel users by playing the 
 
 ### Special Notes
 1) For guild safety and mitigating irresponsive actions, ```dw``` requires adminstrator permissions to use.
+
+### Command List
