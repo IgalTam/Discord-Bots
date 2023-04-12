@@ -22,13 +22,13 @@ This bot is designed to automate server tasks involving tedious administrative a
 ```mult_help```: Explains the syntax for mult (akin to a UNIX man page)
 
 ##### Gmaker Cog (gmaker.py)
-```gmake <infile>```: Reconstructs the guild channel hierarchy contained in the input text file (ideally one created with ```gmakesnap``` or ```gmakeinter```).
-```cgmake <infile>```: Same functionality as ```gmake```, but wipes the existing guild channel hierarchy before creating new channels (requires guild owner privileges).
-```gmakesnap```: Saves the guild channel hierarchy of the calling message's guild as a text file.
+```gmake <infile>```: Reconstructs the guild channel hierarchy contained in the input text file (ideally one created with ```gmakesnap``` or ```gmakeinter```).<br />
+```cgmake <infile>```: Same functionality as ```gmake```, but wipes the existing guild channel hierarchy before creating new channels (requires guild owner privileges).<br />
+```gmakesnap```: Saves the guild channel hierarchy of the calling message's guild as a text file.<br />
 ```gmakeinter```: Interactive process used for manually constructing a guild channel hierarchy text file.
 
 ##### Rmaker Cog (rmaker.py)
-```rmake <infile>```: Reconstructs the guild roles contained in the input text file (ideally one created with ```rmakesnap``` or ```rmakeinter```).
-```crmake <infile>```: Same functionality as ```rmake```, but wipes the existing guild roles before creating new roles (requires guild owner privileges).
-```rmakesnap```: Saves the roles of the calling message's guild as a text file (saves all properties except role distribution to members).
+```rmake <infile>```: Reconstructs the guild roles contained in the input text file (ideally one created with ```rmakesnap``` or ```rmakeinter```).<br />
+```crmake <infile>```: Same functionality as ```rmake```, but wipes the existing guild roles before creating new roles (requires guild owner privileges).<br />
+```rmakesnap```: Saves the roles of the calling message's guild as a text file (saves all properties except role distribution to members).<br />
 ```rmakeinter```: Interactive process used for manually constructing a guild role text file.
