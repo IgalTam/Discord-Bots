@@ -35,7 +35,7 @@ __cmd_utils.py (commands)__<br />
 ##### Bot Access Token Macros (Active Projects)
 As referred to earlier, each bot is programmed to import its access token from a macro in the corresponding ```config.py``` file. Here are the access macros of the active projects for reference:<br />
 1) Bad Grouper: ```BAD_GRPR```
-2) Hunter Bot: ```HUNTER ``` (as referenced earlier)
+2) Hunter Bot: ```HUNTER``` (as referenced earlier)
 3) Hunter Bot MkII: ```HUNTER2```
 4) Impersonator Bot: ```IMPERS```
 5) Vote Kicker: ```VOTEKICK```
