@@ -1,5 +1,5 @@
 from bot_gen_utils import *
-from config import HUNTER2_LNK
+from config import HUNTER2_LNK, FFMPEG_PATH
 import discord
 from discord.ext import commands
 import random
@@ -34,7 +34,7 @@ class HunterBot(commands.Cog):
             voice_channel = guild.voice_client
             async with ctx.typing():
                 filename = await botaudioutils.YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=self.bot.loop)
-                voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
+                voice_channel.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=filename))
             await asyncio.sleep(3.25)
             await voice_channel.disconnect()
             await ctx.send("Operation successful")

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from config import HUNTER2
+from config import HUNTER2, FFMPEG_PATH
 import youtube_dl
 import asyncio
 
@@ -77,7 +77,7 @@ async def p(ctx):
         async with ctx.typing():
             print("async with typing")
             filename = await YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
+            voice_channel.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=filename))
         await asyncio.sleep(4)
         await voice_client.disconnect()
         await ctx.guild.leave()
@@ -90,7 +90,7 @@ async def play_scream(guild_in, voice_client):
     try:
         voice_channel = guild_in.voice_client
         filename = await YTDLSource.from_url('https://www.youtube.com/watch?v=G-ogxxcSZhM', loop=bot.loop)
-        voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
+        voice_channel.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=filename))
         await asyncio.sleep(4)
         await voice_client.disconnect()
         await guild_in.leave()

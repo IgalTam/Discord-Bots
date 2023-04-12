@@ -6,7 +6,7 @@ from queues import QueueLinked
 import youtube_dl
 import asyncio
 import queue
-from config import BAD_ALEXA
+from config import BAD_ALEXA, FFMPEG_PATH
 
 load_dotenv()
 
@@ -77,7 +77,7 @@ async def play(ctx):
 
         async with ctx.typing():
             filename = await YTDLSource.from_url(url, loop=bot.loop)
-            voice_channel.play(discord.FFmpegPCMAudio(executable="C:/FFmpeg/bin/ffmpeg.exe", source=filename))
+            voice_channel.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=filename))
         await play(ctx)
     except:
         await ctx.send("The bot is not connected to a voice channel.")

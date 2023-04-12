@@ -4,9 +4,7 @@ import asyncio
 import random
 from bot_gen_utils import *
 import botaudioutils
-from config import DEF_PFP_PATH
-
-FFMPEG_PATH = "C:/FFmpeg/bin/ffmpeg.exe" # set this to wherever your ffmpeg.exe is stored
+from config import DEF_PFP_PATH, FFMPEG_PATH
 
 class Impersonator(commands.Cog):
     """main set of commands for Impersonator Bot"""
