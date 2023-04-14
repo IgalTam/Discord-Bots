@@ -10,7 +10,7 @@ Github containing my various Discord bot programs. Python-based scripts develope
 
    c) Check the README in the directory of an individual bot for any additional packages to be installed
 
-3) Audio-based bots also require ```ffmpeg```. See the next section for integration information.
+3) 3) Audio-based bots also require ```FFmpeg``` ([found here](https://ffmpeg.org/download.html)). See the next section for more on integration.
 
 ##### To use my bot code for yourself, do the following:
 1) Create a new application for each bot you want to use through the [Discord developer portal](https://discord.com/developers/applications). There are numerous guides online to assist with this process.
