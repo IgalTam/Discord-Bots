@@ -1,0 +1,4 @@
+discord.py==2.1.0
+PyNaCl
+youtube_dl
+python-dotenv

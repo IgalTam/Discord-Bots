@@ -3,14 +3,16 @@ Github containing my various Discord bot programs. Python-based scripts develope
 
 ##### General Required Dependencies
 1) Python 3.11.1 ([found here](https://www.python.org/downloads/release/python-3111/)), or a similar version of Python
-2) Additional Python Packages (use ```pip``` for installation, each page contains pip command for installing)<br />
+2) Additional Python Packages. Use ```pip``` for installation (all packages also contained in ```requirements.txt```):<br />
    a) Discord.py 2.1.0 ([found here](https://pypi.org/project/discord.py/2.1.0/))
 
-   b) For bots playing audio to a voice channel, PyNaCl is required ([found here](https://pypi.org/project/PyNaCl/))
+   b) dotenv ([found here](https://pypi.org/project/python-dotenv/))
 
-   c) For bots playing audio to a voice channel, youtube_dl is required ([found here](https://pypi.org/project/youtube_dl/))
+   c) For bots playing audio to a voice channel, PyNaCl is required ([found here](https://pypi.org/project/PyNaCl/))
 
-   d) Check the README in the directory of an individual bot for any additional packages to be installed
+   d) For bots playing audio to a voice channel, youtube_dl is required ([found here](https://pypi.org/project/youtube_dl/))
+
+   e) Check the README in the directory of an individual bot for any additional packages to be installed
 
 4) 3) Audio-based bots also require ```FFmpeg``` ([found here](https://ffmpeg.org/download.html)). See the next section for more on integration.
 
