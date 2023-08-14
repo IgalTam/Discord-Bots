@@ -6,11 +6,13 @@ Github containing my various Discord bot programs. Python-based scripts develope
 2) Additional Python Packages (use ```pip``` for installation, each page contains pip command for installing)<br />
    a) Discord.py 2.1.0 ([found here](https://pypi.org/project/discord.py/2.1.0/))
 
-   b) For bots playing audio to a voice channel, youtube_dl is required ([found here](https://pypi.org/project/youtube_dl/))
+   b) For bots playing audio to a voice channel, PyNaCl is required ([found here](https://pypi.org/project/PyNaCl/))
 
-   c) Check the README in the directory of an individual bot for any additional packages to be installed
+   c) For bots playing audio to a voice channel, youtube_dl is required ([found here](https://pypi.org/project/youtube_dl/))
 
-3) 3) Audio-based bots also require ```FFmpeg``` ([found here](https://ffmpeg.org/download.html)). See the next section for more on integration.
+   d) Check the README in the directory of an individual bot for any additional packages to be installed
+
+4) 3) Audio-based bots also require ```FFmpeg``` ([found here](https://ffmpeg.org/download.html)). See the next section for more on integration.
 
 ##### To use my bot code for yourself, do the following:
 1) Create a new application for each bot you want to use through the [Discord developer portal](https://discord.com/developers/applications). There are numerous guides online to assist with this process.
