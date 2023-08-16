@@ -4,7 +4,7 @@ Github containing my various Discord bot programs. Python-based scripts develope
 ##### General Required Dependencies
 1) Python 3.11.1 ([found here](https://www.python.org/downloads/release/python-3111/)), or a similar version of Python
 2) Additional Python Packages. Use ```pip``` for installation (all packages also contained in ```requirements.txt```):<br />
-   a) Discord.py 2.1.0 ([found here](https://pypi.org/project/discord.py/2.1.0/))
+   a) Discord.py 2.3.2 ([found here](https://pypi.org/project/discord.py/2.1.0/))
 
    b) dotenv ([found here](https://pypi.org/project/python-dotenv/))
 
