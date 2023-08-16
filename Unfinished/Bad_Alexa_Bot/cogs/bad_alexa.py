@@ -49,15 +49,13 @@ class BadAlexa(commands.Cog):
     async def _join(self, ctx: commands.Context):
         """Joins a voice channel."""
 
-        destination = ctx.author.voice.channel
-        print(f"start of join, voice state is {ctx.voice_state.voice}")
+        destination = ctx.message.author.voice.channel
         if ctx.voice_state.voice:
             await ctx.voice_state.voice.move_to(destination)
             print("bot connected premature return")
             return
 
         ctx.voice_state.voice = await destination.connect()
-        print("bot connected")
 
     @commands.command(name='summon')
     @commands.has_permissions(manage_guild=True)
@@ -228,13 +226,10 @@ class BadAlexa(commands.Cog):
         """
 
         if not ctx.voice_state.voice:
-            print("bot about to join")
             await ctx.invoke(self._join)
 
-        print("bot joined")
         async with ctx.typing():
             try:
-                print("finding source")
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
             except YTDLError as e:
                 print("error")
@@ -249,7 +244,6 @@ class BadAlexa(commands.Cog):
     @_join.before_invoke
     @_play.before_invoke
     async def ensure_voice_state(self, ctx: commands.Context):
-        print("running checks on voice state")
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.CommandError('You are not connected to any voice channel.')
 

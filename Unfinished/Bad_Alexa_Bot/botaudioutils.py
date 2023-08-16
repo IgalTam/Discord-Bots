@@ -6,7 +6,12 @@ import functools
 
 youtube_dl.utils.bugs_reports_message = lambda: ''
 
-ytdl_format_options = {
+class YTDLError(Exception):
+    pass
+
+class YTDLSource(discord.PCMVolumeTransformer):
+
+    ytdl_format_options = {
     'format': 'bestaudio/best',
     'restrictfilenames': True,
     'noplaylist': True,
@@ -17,18 +22,14 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
+    }
 
-ffmpeg_options = {
-    'options': '-vn'
-}
+    ffmpeg_options = {
+        'options': '-vn'
+    }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+    ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
-class YTDLError(Exception):
-    pass
-
-class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 0.5):
         super().__init__(source, volume)
 
@@ -65,7 +66,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
         if data is None:
             raise YTDLError('Couldn\'t find anything that matches `{}`'.format(search))
 
-        print("found data")
         if 'entries' not in data:
             process_info = data
         else:
@@ -95,7 +95,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 except IndexError:
                     raise YTDLError('Couldn\'t retrieve any matches for `{}`'.format(webpage_url))
 
-        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
+        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.ffmpeg_options), data=info)
 
     @staticmethod
     def parse_duration(duration: int):
