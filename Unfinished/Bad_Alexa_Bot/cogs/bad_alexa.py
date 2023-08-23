@@ -45,7 +45,8 @@ class BadAlexa(commands.Cog):
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
         await ctx.send('An error occurred: {}'.format(str(error)))
 
-    @commands.command(name='join', invoke_without_subcommand=True)
+    # @commands.command(name='join', invoke_without_subcommand=True)
+    @commands.hybrid_command(name="join", with_app_command=True, description="joins the message author's voice channel")
     async def _join(self, ctx: commands.Context):
         """Joins a voice channel."""
 
@@ -57,7 +58,8 @@ class BadAlexa(commands.Cog):
 
         ctx.voice_state.voice = await destination.connect()
 
-    @commands.command(name='summon')
+    # @commands.command(name='summon')
+    @commands.hybrid_command(name="summon", with_app_command=True, description="joins the message author's voice channel")
     @commands.has_permissions(manage_guild=True)
     async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
         """Summons the bot to a voice channel.
@@ -74,7 +76,8 @@ class BadAlexa(commands.Cog):
 
         ctx.voice_state.voice = await destination.connect()
 
-    @commands.command(name='leave', aliases=['disconnect'])
+    # @commands.command(name='leave', aliases=['disconnect'])
+    @commands.hybrid_command(name="leave", aliases=['disconnect'], with_app_command=True, description="clears queue and leaves the voice channel")
     @commands.has_permissions(manage_guild=True)
     async def _leave(self, ctx: commands.Context):
         """Clears the queue and leaves the voice channel."""
@@ -85,7 +88,8 @@ class BadAlexa(commands.Cog):
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
 
-    @commands.command(name='volume')
+    # @commands.command(name='volume')
+    @commands.hybrid_command(name="volume", with_app_command=True, description="sets volume of the player")
     async def _volume(self, ctx: commands.Context, *, volume: int):
         """Sets the volume of the player."""
 
@@ -98,13 +102,15 @@ class BadAlexa(commands.Cog):
         ctx.voice_state.volume = volume / 100
         await ctx.send('Volume of the player set to {}%'.format(volume))
 
-    @commands.command(name='now', aliases=['current', 'playing'])
+    # @commands.command(name='now', aliases=['current', 'playing'])
+    @commands.hybrid_command(name="now", aliases=['current', 'playing'], with_app_command=True, description="displays currently playing song")
     async def _now(self, ctx: commands.Context):
         """Displays the currently playing song."""
 
         await ctx.send(embed=ctx.voice_state.current.create_embed())
 
-    @commands.command(name='pause')
+    # @commands.command(name='pause')
+    @commands.hybrid_command(name="pause", with_app_command=True, description="pauses currently playing song")
     @commands.has_permissions(manage_guild=True)
     async def _pause(self, ctx: commands.Context):
         """Pauses the currently playing song."""
@@ -113,7 +119,8 @@ class BadAlexa(commands.Cog):
             ctx.voice_state.voice.pause()
             await ctx.message.add_reaction('⏯')
 
-    @commands.command(name='resume')
+    # @commands.command(name='resume')
+    @commands.hybrid_command(name="resume", with_app_command=True, description="resumes currently paused song")
     @commands.has_permissions(manage_guild=True)
     async def _resume(self, ctx: commands.Context):
         """Resumes a currently paused song."""
@@ -122,7 +129,8 @@ class BadAlexa(commands.Cog):
             ctx.voice_state.voice.resume()
             await ctx.message.add_reaction('⏯')
 
-    @commands.command(name='stop')
+    # @commands.command(name='stop')
+    @commands.hybrid_command(name="stop", with_app_command=True, description="stops currently playing song and clears queue")
     @commands.has_permissions(manage_guild=True)
     async def _stop(self, ctx: commands.Context):
         """Stops playing song and clears the queue."""
@@ -133,7 +141,8 @@ class BadAlexa(commands.Cog):
             ctx.voice_state.voice.stop()
             await ctx.message.add_reaction('⏹')
 
-    @commands.command(name='skip')
+    # @commands.command(name='skip')
+    @commands.hybrid_command(name="skips", with_app_command=True, description="skips currently playing song (3 votes required if not requester of song)")
     async def _skip(self, ctx: commands.Context):
         """Vote to skip a song. The requester can automatically skip.
         3 skip votes are needed for the song to be skipped.
@@ -160,7 +169,8 @@ class BadAlexa(commands.Cog):
         else:
             await ctx.send('You have already voted to skip this song.')
 
-    @commands.command(name='queue')
+    # @commands.command(name='queue')
+    @commands.hybrid_command(name="queue", with_app_command=True, description="[pg] shows the queue (optionally show a specific page)")
     async def _queue(self, ctx: commands.Context, *, page: int = 1):
         """Shows the player's queue.
         You can optionally specify the page to show. Each page contains 10 elements.
@@ -183,7 +193,8 @@ class BadAlexa(commands.Cog):
                  .set_footer(text='Viewing page {}/{}'.format(page, pages)))
         await ctx.send(embed=embed)
 
-    @commands.command(name='shuffle')
+    # @commands.command(name='shuffle')
+    @commands.hybrid_command(name="shuffle", with_app_command=True, description="shuffles the queue")
     async def _shuffle(self, ctx: commands.Context):
         """Shuffles the queue."""
 
@@ -193,7 +204,8 @@ class BadAlexa(commands.Cog):
         ctx.voice_state.songs.shuffle()
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='remove')
+    # @commands.command(name='remove')
+    @commands.hybrid_command(name="remove", with_app_command=True, description="<index> removes song from queue at the index")
     async def _remove(self, ctx: commands.Context, index: int):
         """Removes a song from the queue at a given index."""
 
@@ -203,7 +215,8 @@ class BadAlexa(commands.Cog):
         ctx.voice_state.songs.remove(index - 1)
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='loop')
+    # @commands.command(name='loop')
+    @commands.hybrid_command(name="loop", with_app_command=True, description="loops currently playing song")
     async def _loop(self, ctx: commands.Context):
         """Loops the currently playing song.
         Invoke this command again to unloop the song.
@@ -216,7 +229,8 @@ class BadAlexa(commands.Cog):
         ctx.voice_state.loop = not ctx.voice_state.loop
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='play')
+    # @commands.command(name='play')
+    @commands.hybrid_command(name="play", with_app_command=True, description="adds a song to queue and plays if it is the first queue entry")
     async def _play(self, ctx: commands.Context, *, search: str):
         """Plays a song.
         If there are songs in the queue, this will be queued until the
@@ -240,6 +254,30 @@ class BadAlexa(commands.Cog):
 
                 await ctx.voice_state.songs.put(song)
                 await ctx.send('Enqueued {}'.format(str(source)))
+    
+    @commands.hybrid_command(name="add", with_app_command=True, description="<song> adds song to the queue")
+    async def _add(self, ctx: commands.Context, *, search: str):
+        """Adds a song to the queue (doesn't start playing)"""
+
+        async with ctx.typing():
+            try:
+                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+            except YTDLError as e:
+                print("error")
+                await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+            else:
+                print("play successful")
+                song = AudioItem(source)
+
+                await ctx.voice_state.songs.put(song)
+                await ctx.send('Enqueued {}'.format(str(source)))
+    
+    @commands.hybrid_command(name="clear_queue", with_app_command=True, description="clears the queue")
+    async def _clear_queue(self, ctx: commands.context):
+        """clears the queue"""
+
+        ctx.voice_state.songs.clear()
+        ctx.send('Queue cleared')
 
     @_join.before_invoke
     @_play.before_invoke
