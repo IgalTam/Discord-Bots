@@ -43,3 +43,6 @@ As referred to earlier, each bot is programmed to import its access token from a
 3) Hunter Bot MkII: ```HUNTER2```
 4) Impersonator Bot: ```IMPERS```
 5) Vote Kicker: ```VOTEKICK```
+
+##### Miscellaneous
+1) Due to issues with the current stable version of youtube-dl, make sure to install the nightly version of the library instead for ideal functionality. Follow [this selected GitHub comment](https://github.com/ytdl-org/youtube-dl/issues/31530#issuecomment-1435477247) for info on the procedure.

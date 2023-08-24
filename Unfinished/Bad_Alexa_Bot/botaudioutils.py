@@ -57,6 +57,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
+        """creates a YTDLSource object containing the requested media"""
         print("creating source")
         loop = loop or asyncio.get_event_loop()
 
@@ -96,6 +97,22 @@ class YTDLSource(discord.PCMVolumeTransformer):
                     raise YTDLError('Couldn\'t retrieve any matches for `{}`'.format(webpage_url))
 
         return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.ffmpeg_options), data=info)
+    
+    @classmethod
+    async def source_from_url(cls, ctx: commands.Context, url: str, *, loop: asyncio.BaseEventLoop = None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: cls.ytdl.extract_info(url, download=not stream))
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+        filename = data['title'] if stream else cls.ytdl.prepare_filename(data)
+        return cls(ctx, discord.FFmpegPCMAudio(filename, **cls.ffmpeg_options), data=None)
+
+    @classmethod
+    async def create_source_from_url(cls, url: str, loop: asyncio.BaseEventLoop = None):
+        """creates a YTDLSource object containing the media from the requested URL"""
+        source = await cls.from_url(url, loop)
+        return source
 
     @staticmethod
     def parse_duration(duration: int):
