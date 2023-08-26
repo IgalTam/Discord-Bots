@@ -1,11 +1,7 @@
 import discord
 from discord.ext import commands
 from config import BAD_ALEXA
-from discord import client
-from discord.utils import get
 from dotenv import load_dotenv
-from discord import colour as color
-import getopt
 import os
 
 load_dotenv()
