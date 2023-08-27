@@ -13,3 +13,4 @@ gmaker_tests/*.txt
 testgmake*.txt
 discord_bots/
 discord_bots_outgoing.zip
+**/rust_bot/*
