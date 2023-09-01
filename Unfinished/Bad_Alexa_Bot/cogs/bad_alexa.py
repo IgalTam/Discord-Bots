@@ -139,7 +139,7 @@ class BadAlexa(commands.Cog):
 
         if not ctx.voice_state.is_playing:
             ctx.voice_state.voice.stop()
-            await ctx.message.add_reaction('⏹')
+            # await ctx.message.add_reaction('⏹')
 
     # @commands.command(name='skip')
     @commands.hybrid_command(name="skips", with_app_command=True, description="skips currently playing song (3 votes required if not requester of song)")
@@ -153,7 +153,7 @@ class BadAlexa(commands.Cog):
 
         voter = ctx.message.author
         if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction('⏭')
+            # await ctx.message.add_reaction('⏭')
             ctx.voice_state.skip()
 
         elif voter.id not in ctx.voice_state.skip_votes:
@@ -161,7 +161,7 @@ class BadAlexa(commands.Cog):
             total_votes = len(ctx.voice_state.skip_votes)
 
             if total_votes >= 3:
-                await ctx.message.add_reaction('⏭')
+                # await ctx.message.add_reaction('⏭')
                 ctx.voice_state.skip()
             else:
                 await ctx.send('Skip vote added, currently at **{}/3**'.format(total_votes))
