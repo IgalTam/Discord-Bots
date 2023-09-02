@@ -115,9 +115,11 @@ class BadAlexa(commands.Cog):
     async def _pause(self, ctx: commands.Context):
         """Pauses the currently playing song."""
 
-        if not ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
+        if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
-            await ctx.message.add_reaction('⏯')
+            # await ctx.message.add_reaction('⏸')
+            await ctx.message.channel.send("Paused the player")
+
 
     # @commands.command(name='resume')
     @commands.hybrid_command(name="resume", with_app_command=True, description="resumes currently paused song")
@@ -125,9 +127,10 @@ class BadAlexa(commands.Cog):
     async def _resume(self, ctx: commands.Context):
         """Resumes a currently paused song."""
 
-        if not ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
+        if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
-            await ctx.message.add_reaction('⏯')
+            # await ctx.message.add_reaction('▶')
+            await ctx.message.channel.send("Resumed the player")
 
     # @commands.command(name='stop')
     @commands.hybrid_command(name="stop", with_app_command=True, description="stops currently playing song and clears queue")
@@ -202,7 +205,7 @@ class BadAlexa(commands.Cog):
             return await ctx.send('Empty queue.')
 
         ctx.voice_state.songs.shuffle()
-        await ctx.message.add_reaction('✅')
+        # await ctx.message.add_reaction('✅')
 
     # @commands.command(name='remove')
     @commands.hybrid_command(name="remove", with_app_command=True, description="<index> removes song from queue at the index")
@@ -213,7 +216,7 @@ class BadAlexa(commands.Cog):
             return await ctx.send('Empty queue.')
 
         ctx.voice_state.songs.remove(index - 1)
-        await ctx.message.add_reaction('✅')
+        # await ctx.message.add_reaction('✅')
 
     # @commands.command(name='loop')
     @commands.hybrid_command(name="loop", with_app_command=True, description="loops currently playing song")
@@ -227,7 +230,7 @@ class BadAlexa(commands.Cog):
 
         # Inverse boolean value to loop and unloop.
         ctx.voice_state.loop = not ctx.voice_state.loop
-        await ctx.message.add_reaction('✅')
+        # await ctx.message.add_reaction('✅')
 
     # @commands.command(name='play')
     @commands.hybrid_command(name="play", with_app_command=True, description="adds a song to queue and plays if it is the first queue entry")
