@@ -96,7 +96,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 except IndexError:
                     raise YTDLError('Couldn\'t retrieve any matches for `{}`'.format(webpage_url))
 
-        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.ffmpeg_options), data=info)
+        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.ffmpeg_options, before_options=" -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"), data=info)
     
     @classmethod
     async def source_from_url(cls, ctx: commands.Context, url: str, *, loop: asyncio.BaseEventLoop = None, stream=False):
