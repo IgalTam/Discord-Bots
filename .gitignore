@@ -13,4 +13,6 @@ gmaker_tests/*.txt
 testgmake*.txt
 discord_bots/
 discord_bots_outgoing.zip
-**/rust_bot/*
+Unfinished/rust_bot/target/
+Unfinished/rust_bot/Cargo.lock
+Unfinished/rust_bot/.env
