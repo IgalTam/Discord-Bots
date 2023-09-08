@@ -1,3 +1,6 @@
+//! Reminder Bot
+//! A Rust-based Discord bot that creates reminders for events, each of which ping people/roles on a configurable interval until the reminder expires.
+
 mod commands;
 
 use std::collections::HashSet;
@@ -20,7 +23,7 @@ use async_timer::Interval;
 
 use crate::commands::meta::*;
 use crate::commands::reminder::*;
-use crate::commands::reminder::{Reminder, ReminderUpdateError};
+use crate::commands::reminder::{Reminder, ReminderError};
 
 pub struct ShardManagerContainer;
 
@@ -32,28 +35,47 @@ struct ReminderStorage {
     reminders: HashMap<u32, Reminder>,
 }
 
+/// Struct for storing and polling created Reminders.
 impl ReminderStorage {
+
+    /// Creates a new ReminderStorage object.
     fn new() -> ReminderStorage {
         ReminderStorage {
             reminders: HashMap::new(),
         }
     }
 
-    async fn poll_reminders(&self) -> Result<(), ReminderUpdateError> {
-        for (_, reminder) in &self.reminders {
+    /// Polls all ```Reminders``` stored in ```reminders```,
+    /// calling ```Reminder::post_reminder``` for each of them
+    /// and cleaning up expired ```Reminders```.
+    /// 
+    /// Returns ```Err(ReminderUpdateError)``` when encountering errors
+    /// during runtime, otherwise returns ```Ok(())```.
+    async fn poll_reminders(&self, ctx: &Context) -> Result<Vec<u32>, ReminderError> {
+        let mut expired: Vec<u32> = vec!();
+        for (rem_id, reminder) in &self.reminders {
             match reminder.expired().await {
-                Ok(true) => { 
+                Ok((true, cur_time)) => { 
+                    // the reminder has expired -> post reminder and add its ID to expired vector
+                    match reminder.post_reminder(ctx, cur_time).await {
+                        Ok(()) => expired.push(*rem_id),
+                        Err(e) => println!("Error encountered while polling reminders: {:?}", e),
+                    }
                     
                 }
-                Ok(false) => {
-
+                Ok((false, cur_time)) => {
+                    // the reminder has not expired -> post reminder and don't do anything else
+                    match reminder.post_reminder(ctx, cur_time).await {
+                        Err(e) => println!("Error encountered while polling reminders: {:?}", e),
+                        _ => (),
+                    }
                 }
-                Err(e) => { return Err(ReminderUpdateError); }
+                Err(e) => { return Err(e); }
             }
         }
 
         println!("polled all reminders");
-        Ok(())
+        Ok(expired)
     }
 }
 struct ReminderStorageWrapper; 
@@ -66,19 +88,32 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    /// initializes asynchronous timer for polling stored reminders
+    // initializes asynchronous timer for polling stored reminders
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.name);
-        let mut interval = Interval::platform_new(core::time::Duration::from_secs(2));
+        let mut interval = Interval::platform_new(core::time::Duration::from_secs(60)); // polls all reminders every minute
         loop {
+            // poll reminders, retrieve IDs of expired reminders
+            let reminder_lock = {
+                let data_read = ctx.data.read().await;
+                data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+            };
+            let expired_rems = {
+                let reminders = reminder_lock.write().await;
+                match reminders.poll_reminders(&ctx).await {
+                    Ok(expired) => expired.clone(),
+                    Err(e) => panic!("Failed to update reminders: {:?}", e),
+                }
+            };
+            // remove expire reminders from ReminderStorage
             let reminder_lock = {
                 let data_read = ctx.data.read().await;
                 data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
             };
             {
-                let reminders = reminder_lock.write().await;
-                if let Err(e) = reminders.poll_reminders().await {
-                    panic!("Failed to update reminders: {:?}", e);
+                let mut reminders = reminder_lock.write().await;
+                for rem_id in expired_rems {
+                    reminders.reminders.remove(&rem_id);
                 }
             }
             interval.as_mut().await;
