@@ -4,6 +4,7 @@ use serenity::model::prelude::*;
 use serenity::utils::MessageBuilder;
 use serenity::prelude::*;
 use chrono::prelude::*;
+use crate::ReminderStorageWrapper;
 
 #[derive(Debug)]
 pub struct ReminderError;
@@ -101,10 +102,36 @@ impl Reminder {
     }
 }
 
-///
+/// Creates a reminder and installs it in the global ReminderStorage.
+/// 
+/// Command Arguments:
+/// - Reminder event name
+/// - Reminder message
+/// - Reminder target mentions (members/roles)
+/// - Reminder expiration date/time ("<year>/<month>/<day>/<hour>/<minute>/<second>")
+/// - Reminder interval type ("year", "month", "day", etc.)
+/// - Reminder interval length (whole number)
 #[command]
-async fn set_reminder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    
+async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    // check for all required arguments
+    if args.len() != 7 {
+        msg.reply(ctx, "Six arguments (event name, message, mentions, expiration deadline, interval type, interval length) required.").await?;
+        return Ok(());
+    }
+
+    // let 
+
+    let reminder_lock = {
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    let confirm = {
+        let reminders = reminder_lock.write().await;
+
+    };
+
+
+
     Ok(())
 }
 
