@@ -12,9 +12,16 @@ use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::standard::macros::group;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
-use serenity::model::event::ResumedEvent;
-use serenity::model::gateway::Ready;
-use serenity::model::prelude::*;
+use serenity::model::application::{
+    command::Command,
+    interaction::{Interaction, InteractionResponseType},
+};
+use serenity::model::{
+    event::ResumedEvent,
+    gateway::Ready,
+    id::GuildId,
+    prelude::*,
+};
 use serenity::prelude::*;
 use tracing::error;
 use std::collections::HashMap;
@@ -88,9 +95,49 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    // initializes asynchronous timer for polling stored reminders
+
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::ApplicationCommand(command) = interaction {
+            // println!("Received command interaction: {:#?}", command);
+
+            let content = match command.data.name.as_str() {
+                "ping" => commands::ping::run(&command.data.options),
+                "set_reminder" => commands::set_reminder::run(&command.data.options),
+                _ => "not implemented".to_string(),
+            };
+
+            if let Err(why) = command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::ChannelMessageWithSource)
+                        .interaction_response_data(|message| message.content(content))
+                })
+                .await
+            {
+                println!("Cannot respond to slash command: {}", why);
+            }
+        }
+    }
+
+    // initializes slash commands asynchronous handler for polling stored reminders
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.name);
+
+        // set up slash commands
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        );
+        let _commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+            commands
+                .create_application_command(|command| commands::ping::register(command))
+                .create_application_command(|command| commands::set_reminder::register(command))
+        }).await;
+        // println!("I now have the following guild slash commands: {:#?}", commands);
+
+        // engage reminder handler
         let mut interval = Interval::platform_new(core::time::Duration::from_secs(60)); // polls all reminders every minute
         loop {
             // poll reminders, retrieve IDs of expired reminders
