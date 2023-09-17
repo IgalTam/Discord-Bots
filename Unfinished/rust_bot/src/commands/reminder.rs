@@ -9,10 +9,10 @@ use crate::ReminderStorageWrapper;
 #[derive(Debug)]
 pub struct ReminderError;
 
-trait MentionShowable: Mentionable + std::fmt::Display {}
+// trait MentionShowable: Mentionable + std::fmt::Display {}
 
 /// Struct for storing reminder metadata.
-pub struct Reminder<'a> {
+pub struct Reminder {
     rem_id: u32,
     rem_name: String,
     rem_msg: String,
@@ -21,16 +21,16 @@ pub struct Reminder<'a> {
     // rem_channel: Channel,
     rem_channel_id: ChannelId,
     // rem_targs: Vec<Role>,
-    rem_targ: &'a dyn MentionShowable,
+    rem_targ: Role,
     // rem_targs: Vec<String>,
     rem_expire: DateTime<Local>,
     rem_interval_type: String,
     rem_interval_qty: u32,
 }
 
-impl<'a>  Reminder<'a> {
+impl  Reminder {
     /// Creates a new Reminder object.
-    fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: &'a dyn MentionShowable, deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32) -> Self {
+    pub fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: Role, deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32) -> Self {
         Reminder {
             rem_id: id,
             rem_name: nm,
@@ -106,77 +106,77 @@ impl<'a>  Reminder<'a> {
     }
 }
 
-/// Creates a reminder and installs it in the global ReminderStorage.
-/// 
-/// Command Arguments:
-/// - Reminder event name
-/// - Reminder message
-/// - Reminder target mentions (members/roles)
-/// - Reminder expiration date/time ("<year>/<month>/<day>/<hour>/<minute>/<second>")
-/// - Reminder interval type ("year", "month", "day", etc.)
-/// - Reminder interval length (whole number)
-#[command]
-async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    // check for all required arguments
-    if args.len() != 7 {
-        msg.reply(ctx, "Six arguments (event name, message, mentions, expiration deadline, interval type, interval length) required.").await?;
-        return Ok(());
-    }
+// Creates a reminder and installs it in the global ReminderStorage.
+// 
+// Command Arguments:
+// - Reminder event name
+// - Reminder message
+// - Reminder target mentions (members/roles)
+// - Reminder expiration date/time ("<year>/<month>/<day>/<hour>/<minute>/<second>")
+// - Reminder interval type ("year", "month", "day", etc.)
+// - Reminder interval length (whole number)
+// #[command]
+// async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+//     // check for all required arguments
+//     if args.len() != 7 {
+//         msg.reply(ctx, "Six arguments (event name, message, mentions, expiration deadline, interval type, interval length) required.").await?;
+//         return Ok(());
+//     }
 
-    // let 
+//     // let 
 
-    let reminder_lock = {
-        let data_read = ctx.data.read().await;
-        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
-    };
-    let confirm = {
-        let reminders = reminder_lock.write().await;
+//     let reminder_lock = {
+//         let data_read = ctx.data.read().await;
+//         data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+//     };
+//     let confirm = {
+//         let reminders = reminder_lock.write().await;
 
-    };
+//     };
 
 
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn cancel_reminder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn cancel_reminder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn list_reminders(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn list_reminders(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn update_reminder_message(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn update_reminder_message(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn update_reminder_targets(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn update_reminder_targets(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn update_reminder_deadline(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn update_reminder_deadline(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-///
-#[command]
-async fn update_reminder_interval(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+// ///
+// #[command]
+// async fn update_reminder_interval(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
-    Ok(())
-}
+//     Ok(())
+// }

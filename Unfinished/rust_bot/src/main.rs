@@ -39,6 +39,7 @@ impl TypeMapKey for ShardManagerContainer {
 }
 
 struct ReminderStorage {
+    next_rem_id: u32,
     reminders: HashMap<u32, Reminder>,
 }
 
@@ -48,6 +49,7 @@ impl ReminderStorage {
     /// Creates a new ReminderStorage object.
     fn new() -> ReminderStorage {
         ReminderStorage {
+            next_rem_id: 0,
             reminders: HashMap::new(),
         }
     }
@@ -102,7 +104,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx),
+                "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()),
                 _ => "not implemented".to_string(),
             };
 

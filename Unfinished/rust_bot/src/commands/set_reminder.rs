@@ -1,12 +1,17 @@
-use crate::commands::reminder::{Reminder, ReminderError};
+use crate::commands::reminder::Reminder;
+use crate::ReminderStorageWrapper;
 
 use serenity::builder::CreateApplicationCommand;
+use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
+use serenity::model::prelude::Role;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
     CommandDataOption,
     CommandDataOptionValue,
 };
 use serenity::client::Context;
+use chrono::{DateTime, Local, TimeZone};
+use tokio::runtime::Handle;
 
 
 /// Creates a reminder and installs it in the global ReminderStorage.
@@ -14,11 +19,11 @@ use serenity::client::Context;
 /// Command Arguments:
 /// - Reminder event name
 /// - Reminder event message
-/// - Reminder target mentions (members/roles)
+/// - Reminder target role
 /// - Reminder expiration date/time ("year/month/day/hour/minute/second")
 /// - Reminder interval type ("year", "month", "day", etc.)
 /// - Reminder interval length (whole number)
-pub fn run(options: &[CommandDataOption], ctx: &Context) -> Result<(), ReminderError> {
+pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
     // parse command arguments
     let event_name = options
         .get(0)
@@ -26,49 +31,126 @@ pub fn run(options: &[CommandDataOption], ctx: &Context) -> Result<(), ReminderE
         .resolved
         .as_ref()
         .expect("Expected String object");
+    let name_str: &str;
+    if let CommandDataOptionValue::String(ev_nm) = event_name {
+        name_str = ev_nm;
+    } else {
+        return "Missing event name".to_string();
+    }
+
     let event_message = options
         .get(1)
         .expect("Expected event message")
         .resolved
         .as_ref()
         .expect("Expected String object");
-    let targ_mention = options
+    let msg_str: &str;
+    if let CommandDataOptionValue::String(ev_msg) = event_message {
+        msg_str = ev_msg;
+    } else {
+        return "Missing event message".to_string();
+    }
+
+    let targ_role = options
         .get(2)
         .expect("Expected target mention")
         .resolved
         .as_ref()
         .expect("Expected Mentionable object");
+    let rem_role: &Role;
+    if let CommandDataOptionValue::Role(ev_role) = targ_role {
+        rem_role = ev_role;
+    } else {
+        return "Missing target role".to_string();
+    }
+
     let xpr_date = options
         .get(3)
         .expect("Expected reminder expiration date")
         .resolved
         .as_ref()
         .expect("Expected String object");
+    let date_str: Vec<&str>;
+    if let CommandDataOptionValue::String(date) = xpr_date {
+        date_str = date.split('/').collect();
+        if date_str.len() != 6 {
+            return "Invalid expiration date formatting 
+                    (requires <year>/<month>/<day>/<hour>/<minute>/<second>)".to_string();
+        }
+    } else {
+        return "Invalid expiration date".to_string();
+    }
+    let xpr_datetime: DateTime<Local> = Local.with_ymd_and_hms(
+        date_str[0].parse::<i32>().unwrap(),
+        date_str[1].parse::<u32>().unwrap(),
+        date_str[2].parse::<u32>().unwrap(),
+        date_str[3].parse::<u32>().unwrap(),
+        date_str[4].parse::<u32>().unwrap(),
+        date_str[5].parse::<u32>().unwrap(),
+    ).unwrap();
+
     let ivl_type = options
         .get(4)
         .expect("Expected reminder interval type")
         .resolved
         .as_ref()
         .expect("Expected String object");
+    let ivl_type_str: &str;
+    if let CommandDataOptionValue::String(ev_ivl_type) = ivl_type {
+        ivl_type_str = ev_ivl_type;
+    } else {
+        return "Missing interval type (year, month, day, hour, minute)".to_string();
+    }
+
     let ivl_qty = options
         .get(5)
         .expect("Expected reminder interval quantity")
         .resolved
         .as_ref()
         .expect("Expected Integer object");
+    let ivl_qty_num: u32;
+    if let CommandDataOptionValue::String(qty_str) = ivl_qty {
+        ivl_qty_num = qty_str.parse::<u32>().unwrap();
+    } else {
+        return "Missing interval quantity".to_string();
+    }
 
-    // create Reminder object
-    // if let CommandDataOptionValue::User(user, _member) = option {
-    //     format!("{}'s id is {}", user.tag(), user.id)
-    // } else {
-    //     "Please provide a valid user".to_string()
-    // }
-    // if let CommandDataOptionValue::String(date_str) = xpr_date {
-    //     date_str
-    // } else {
-    //     return Err(ReminderError);
-    // }
+    // enter the async runtime to update metadata
+    let handle = Handle::current();
+    handle.enter();
+    futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num));
+    
+    format!("Reminder for {} is set.", name_str)
+}
 
+/// Asynchronous portion of ```set_reminder```, involving access to the bot's metadata.
+/// 
+/// This code is separate from ```run()``` due to the use of ```futures::executor::block_on()``` to enter the main
+/// Tokio runtime from a synchronous function.
+async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
+                         rem_role: &Role, xpr_datetime: DateTime<Local>, ivl_type_str: &str, ivl_qty_num: u32) {
+    let reminder_lock = {
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+
+    {
+        let mut reminders = reminder_lock.write().await;
+        let assgn_id = reminders.next_rem_id;
+        let new_rem = Reminder::new(
+            assgn_id,
+            name_str.to_string(),
+            msg_str.to_string(),
+            inter.user.name.clone(),
+            inter.channel_id.clone(),
+            rem_role.clone(),
+            xpr_datetime,
+            ivl_type_str.to_string(),
+            ivl_qty_num,
+        );
+        reminders.reminders.insert(assgn_id, new_rem);
+        reminders.next_rem_id += 1;
+    }
 }
 
 /// Registers ```set_reminder``` as a slash command, configures input formatting.
@@ -92,7 +174,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             option
                 .name("Target Role")
                 .description("The user/role that is to be mentioned in reminders for this event.")
-                .kind(CommandOptionType::Mentionable)
+                .kind(CommandOptionType::Role)
                 .required(true)
         })
         .create_option(|option| {
