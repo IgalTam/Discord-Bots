@@ -9,8 +9,10 @@ use crate::ReminderStorageWrapper;
 #[derive(Debug)]
 pub struct ReminderError;
 
+trait MentionShowable: Mentionable + std::fmt::Display {}
+
 /// Struct for storing reminder metadata.
-pub struct Reminder {
+pub struct Reminder<'a> {
     rem_id: u32,
     rem_name: String,
     rem_msg: String,
@@ -18,23 +20,24 @@ pub struct Reminder {
     rem_author: String,
     // rem_channel: Channel,
     rem_channel_id: ChannelId,
-    // rem_targs: Vec<Member>,
-    rem_targs: Vec<String>,
+    // rem_targs: Vec<Role>,
+    rem_targ: &'a dyn MentionShowable,
+    // rem_targs: Vec<String>,
     rem_expire: DateTime<Local>,
     rem_interval_type: String,
     rem_interval_qty: u32,
 }
 
-impl Reminder {
+impl<'a>  Reminder<'a> {
     /// Creates a new Reminder object.
-    fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targs: Vec<String>, deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32) -> Self {
+    fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: &'a dyn MentionShowable, deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32) -> Self {
         Reminder {
             rem_id: id,
             rem_name: nm,
             rem_msg: msg,
             rem_author: auth,
             rem_channel_id: chnl_id,
-            rem_targs: targs,
+            rem_targ: targ,
             rem_expire: deadline,
             rem_interval_type: ivt_type,
             rem_interval_qty: ivt_qty,
@@ -68,11 +71,12 @@ impl Reminder {
 
         // get String of mention targets
         let mut mention_targs = String::new();        
-        for targ in &self.rem_targs {
-            mention_targs.push('@');
-            mention_targs.push_str(targ);
-            mention_targs.push(' ');
-        }
+        // for targ in &self.rem_targs {
+        //     mention_targs.push('@');
+        //     mention_targs.push_str(&targ.name);
+        //     mention_targs.push(' ');
+        // }
+        mention_targs.push_str(&self.rem_targ.to_string());
 
         // build reminder message
         let post = MessageBuilder::new()

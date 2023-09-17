@@ -102,7 +102,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                "set_reminder" => commands::set_reminder::run(&command.data.options),
+                "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx),
                 _ => "not implemented".to_string(),
             };
 
