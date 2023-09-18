@@ -3,7 +3,10 @@ use serenity::framework::standard::{Args, CommandResult};
 use serenity::model::prelude::*;
 use serenity::utils::MessageBuilder;
 use serenity::prelude::*;
-use chrono::prelude::*;
+use chrono::{
+    Duration,
+    prelude::*,
+};
 use crate::ReminderStorageWrapper;
 
 #[derive(Debug)]
@@ -26,11 +29,13 @@ pub struct Reminder {
     rem_expire: DateTime<Local>,
     rem_interval_type: String,
     rem_interval_qty: u32,
+    next_poll: DateTime<Local>,
 }
 
 impl  Reminder {
     /// Creates a new Reminder object.
-    pub fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: Role, deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32) -> Self {
+    pub fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: Role, 
+               deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32, next_poll: DateTime<Local>) -> Self {
         Reminder {
             rem_id: id,
             rem_name: nm,
@@ -41,23 +46,41 @@ impl  Reminder {
             rem_expire: deadline,
             rem_interval_type: ivt_type,
             rem_interval_qty: ivt_qty,
+            next_poll: next_poll,
         }
+    }
+
+    /// Sets the next DateTime at which the reminder is to be posted after being polled.
+    /// 
+    /// Returns ```Ok(())``` on success, returns a ```ReminderError``` if an invalid ```rem_interval_type``` is stored.
+    pub fn set_next_poll(&mut self) -> Result<(), ReminderError> {
+        match self.rem_interval_type.as_str() {
+            "day"=> self.next_poll.checked_add_signed(Duration::days(self.rem_interval_qty.into())).unwrap(),
+            "hour" => self.next_poll.checked_add_signed(Duration::hours(self.rem_interval_qty.into())).unwrap(),
+            "minute" => self.next_poll.checked_add_signed(Duration::minutes(self.rem_interval_qty.into())).unwrap(),
+            _ => return Err(ReminderError),
+        };
+        Ok(())
     }
 
     /// Checks if the Reminder deadline has expired.
     /// 
-    /// Returns ```true``` if the Reminder has expired, ```false```
-    /// if the Reminder has not yet epxired, and a ```ReminderUpdateError``` if
-    /// the current, real world time is past the Reminder's expiration time
-    /// (the Reminder should have expired, but didnt').
-    pub async fn expired(&self) -> Result<(bool, DateTime<Local>), ReminderError> {
+    /// Returns a tuple of the form ```(has_expired, needs_post, current_time)```.
+    /// ```has_expired``` is a boolean indicating whether the Reminder has expired 
+    /// (its expiration DateTime is greater than the current DateTime). ```needs_post```
+    /// is a boolean indicates whether the Reminder should be posted (with ```post_reminder```).
+    /// ```current_time``` is the current DateTime object obtained in this method, passed along
+    /// for further calculations.
+    pub async fn expired(&self) -> (bool, bool, DateTime<Local>) {
         let cur_time = Local::now();
-        if self.rem_expire == cur_time {
-            Ok((true, cur_time))
-        } else if self.rem_expire < cur_time {
-            Ok((false, cur_time))
+        if self.rem_expire >= cur_time && self.next_poll >= cur_time {  
+            (true, true, cur_time)     // reminder has expired, needs to be posted
+        } else if self.rem_expire >= cur_time && self.next_poll < cur_time { 
+            (true, false, cur_time)     // reminder has expired, doesn't need to be posted
+        } else if self.rem_expire < cur_time && self.next_poll >= cur_time {
+            (false, true, cur_time)     // reminder has not expired, needs to be posted
         } else {
-            Err(ReminderError)
+            (false, false, cur_time)  // reminder has not expired, doesn't need to be posted
         }
     }
 

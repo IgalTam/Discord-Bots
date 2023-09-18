@@ -10,7 +10,7 @@ use serenity::model::prelude::interaction::application_command::{
     CommandDataOptionValue,
 };
 use serenity::client::Context;
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone, Duration};
 use tokio::runtime::Handle;
 
 
@@ -21,7 +21,7 @@ use tokio::runtime::Handle;
 /// - Reminder event message
 /// - Reminder target role
 /// - Reminder expiration date/time ("year/month/day/hour/minute/second")
-/// - Reminder interval type ("year", "month", "day", etc.)
+/// - Reminder interval type (day, hour, or minute (must be at least 10 minutes))
 /// - Reminder interval length (whole number)
 pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
     // parse command arguments
@@ -99,7 +99,7 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
     if let CommandDataOptionValue::String(ev_ivl_type) = ivl_type {
         ivl_type_str = ev_ivl_type;
     } else {
-        return "Missing interval type (year, month, day, hour, minute)".to_string();
+        return "Missing interval type (day, hour, or minute (at least 10 minutes))".to_string();
     }
 
     let ivl_qty = options
@@ -115,10 +115,24 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
         return "Missing interval quantity".to_string();
     }
 
+    // configure the DateTime for the first Reminder ping
+    let first_poll = Local::now();
+    match ivl_type_str {
+        "day" => first_poll.checked_add_signed(Duration::days(ivl_qty_num.into())).unwrap(),
+        "hour" => first_poll.checked_add_signed(Duration::hours(ivl_qty_num.into())).unwrap(),
+        "minute" => {
+            if ivl_qty_num < 10 {
+                return "Invalid interval length, must be at least 10 minutes".to_string();
+            }
+            first_poll.checked_add_signed(Duration::minutes(ivl_qty_num.into())).unwrap()
+        }
+        _ => return "Invalid interval type (must be year, month, day, hour, or minute)".to_string(),
+    };
+
     // enter the async runtime to update metadata
     let handle = Handle::current();
     handle.enter();
-    futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num));
+    futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
     
     format!("Reminder for {} is set.", name_str)
 }
@@ -128,16 +142,17 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
 /// This code is separate from ```run()``` due to the use of ```futures::executor::block_on()``` to enter the main
 /// Tokio runtime from a synchronous function.
 async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
-                         rem_role: &Role, xpr_datetime: DateTime<Local>, ivl_type_str: &str, ivl_qty_num: u32) {
+                         rem_role: &Role, xpr_datetime: DateTime<Local>, ivl_type_str: &str, ivl_qty_num: u32, first_poll: DateTime<Local>) {
+    // read bot metadata
     let reminder_lock = {
         let data_read = ctx.data.read().await;
         data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
     };
 
     {
-        let mut reminders = reminder_lock.write().await;
-        let assgn_id = reminders.next_rem_id;
-        let new_rem = Reminder::new(
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        let assgn_id = reminders.next_rem_id;   // retrieve next ID to be assigned to the new reminder
+        let new_rem = Reminder::new(       // create new reminder
             assgn_id,
             name_str.to_string(),
             msg_str.to_string(),
@@ -147,9 +162,10 @@ async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: Ap
             xpr_datetime,
             ivl_type_str.to_string(),
             ivl_qty_num,
+            first_poll,
         );
-        reminders.reminders.insert(assgn_id, new_rem);
-        reminders.next_rem_id += 1;
+        reminders.reminders.insert(assgn_id, new_rem);  // insert new reminder into reminder scheduler
+        reminders.next_rem_id += 1;                          // update next reminder ID
     }
 }
 

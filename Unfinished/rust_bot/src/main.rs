@@ -6,6 +6,7 @@ mod commands;
 use std::collections::HashSet;
 use std::env;
 use std::sync::Arc;
+use std::collections::HashMap;
 
 use serenity::async_trait;
 use serenity::client::bridge::gateway::ShardManager;
@@ -24,7 +25,6 @@ use serenity::model::{
 };
 use serenity::prelude::*;
 use tracing::error;
-use std::collections::HashMap;
 use chrono::prelude::*;
 use async_timer::Interval;
 
@@ -38,6 +38,7 @@ impl TypeMapKey for ShardManagerContainer {
     type Value = Arc<Mutex<ShardManager>>;
 }
 
+// #[derive(IndexMut)]
 struct ReminderStorage {
     next_rem_id: u32,
     reminders: HashMap<u32, Reminder>,
@@ -55,31 +56,33 @@ impl ReminderStorage {
     }
 
     /// Polls all ```Reminders``` stored in ```reminders```,
-    /// calling ```Reminder::post_reminder``` for each of them
-    /// and cleaning up expired ```Reminders```.
+    /// calling ```post_reminder()``` and ```set_next_poll()``` for
+    /// each reminder ready to be posted and cleaning up expired ```Reminders```.
     /// 
-    /// Returns ```Err(ReminderUpdateError)``` when encountering errors
-    /// during runtime, otherwise returns ```Ok(())```.
-    async fn poll_reminders(&self, ctx: &Context) -> Result<Vec<u32>, ReminderError> {
+    /// Raises a ```ReminderError``` when encountering errors
+    /// during runtime, otherwise returns a tuple containing vectors
+    /// with the IDs of expired reminders and reminders that require updated ```next_poll```s.
+    async fn poll_reminders(&mut self, ctx: &Context) -> Result<Vec<u32>, ReminderError> {
         let mut expired: Vec<u32> = vec!();
-        for (rem_id, reminder) in &self.reminders {
-            match reminder.expired().await {
-                Ok((true, cur_time)) => { 
-                    // the reminder has expired -> post reminder and add its ID to expired vector
-                    match reminder.post_reminder(ctx, cur_time).await {
-                        Ok(()) => expired.push(*rem_id),
-                        Err(e) => println!("Error encountered while polling reminders: {:?}", e),
+        for (rem_id, reminder) in &mut self.reminders {
+            let (has_exp, has_post, cur_time) = reminder.expired().await;
+            if has_post {   // the reminder is ready to be posted
+                match reminder.post_reminder(ctx, cur_time).await {
+                    Err(e) => {
+                        println!("Error encountered while polling reminders: {:?}", e);
+                        return Err(e);
                     }
-                    
+                    _ => (),
                 }
-                Ok((false, cur_time)) => {
-                    // the reminder has not expired -> post reminder and don't do anything else
-                    match reminder.post_reminder(ctx, cur_time).await {
-                        Err(e) => println!("Error encountered while polling reminders: {:?}", e),
-                        _ => (),
+                if !has_exp {   // update the next_poll of the reminder if it is not expired
+                    if let Err(e) = reminder.set_next_poll() {
+                        println!("Error encountered while updating reminder next poll: {:?}", e);
+                        return Err(e);
                     }
                 }
-                Err(e) => { return Err(e); }
+            }
+            if has_exp {    // the reminder has expired -> add its ID to the expired vector
+                expired.push(*rem_id);
             }
         }
 
@@ -148,7 +151,7 @@ impl EventHandler for Handler {
                 data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
             };
             let expired_rems = {
-                let reminders = reminder_lock.write().await;
+                let mut reminders = reminder_lock.write().await;
                 match reminders.poll_reminders(&ctx).await {
                     Ok(expired) => expired.clone(),
                     Err(e) => panic!("Failed to update reminders: {:?}", e),
