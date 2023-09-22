@@ -13,10 +13,7 @@ use serenity::client::bridge::gateway::ShardManager;
 use serenity::framework::standard::macros::group;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
-use serenity::model::application::{
-    command::Command,
-    interaction::{Interaction, InteractionResponseType},
-};
+use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::{
     event::ResumedEvent,
     gateway::Ready,
@@ -25,11 +22,9 @@ use serenity::model::{
 };
 use serenity::prelude::*;
 use tracing::error;
-use chrono::prelude::*;
 use async_timer::Interval;
 
 use crate::commands::meta::*;
-use crate::commands::reminder::*;
 use crate::commands::reminder::{Reminder, ReminderError};
 
 pub struct ShardManagerContainer;
@@ -140,7 +135,8 @@ impl EventHandler for Handler {
                 .create_application_command(|command| commands::ping::register(command))
                 .create_application_command(|command| commands::set_reminder::register(command))
         }).await;
-        // println!("I now have the following guild slash commands: {:#?}", commands);
+        // println!("I now have the following guild slash commands: {:#?}", _commands);
+        // println!("set_reminder stuff: {:#?}", _commands[1].);
 
         // engage reminder handler
         let mut interval = Interval::platform_new(core::time::Duration::from_secs(60)); // polls all reminders every minute

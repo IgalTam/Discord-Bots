@@ -131,8 +131,9 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
 
     // enter the async runtime to update metadata
     let handle = Handle::current();
-    handle.enter();
+    let temp_rt = handle.enter();
     futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
+    drop(temp_rt);
     
     format!("Reminder for {} is set.", name_str)
 }
@@ -171,6 +172,7 @@ async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: Ap
 
 /// Registers ```set_reminder``` as a slash command, configures input formatting.
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+    println!("start of set_reminder register");
     command.name("set_reminder").description("Sets a reminder")
         .create_option(|option|{
             option
