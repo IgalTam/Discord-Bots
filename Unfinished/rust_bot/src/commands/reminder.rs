@@ -17,7 +17,7 @@ pub struct ReminderError;
 
 /// Struct for storing reminder metadata.
 pub struct Reminder {
-    rem_id: u32,
+    _rem_id: u32,
     rem_name: String,
     rem_msg: String,
     // rem_author: Member,
@@ -38,7 +38,7 @@ impl  Reminder {
     pub fn new(id: u32, nm: String, msg: String, auth: String, chnl_id: ChannelId, targ: Role, 
                deadline: DateTime<Local>, ivt_type: String, ivt_qty: u32, next_poll: DateTime<Local>) -> Self {
         Reminder {
-            rem_id: id,
+            _rem_id: id,
             rem_name: nm,
             rem_msg: msg,
             rem_author: auth,
@@ -142,7 +142,7 @@ impl  Reminder {
 /// - Reminder interval length (whole number)
 async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     // check for all required arguments
-    if args.len() != 7 {
+    if args.len() != 6 {
         msg.reply(ctx, "Six arguments (event name, message, mentioned role, expiration deadline, interval type, interval length) required.").await?;
         return Ok(());
     }
@@ -152,8 +152,20 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     // parse arguments
     let name_str = args_copy.single::<String>()?;
     let msg_str = args_copy.single::<String>()?;
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let rem_role = guild.role_by_name(args_copy.single::<String>()?.as_str()).unwrap().clone();
+
+    let rem_role: Role;
+    if let Some(guild) = msg.guild(&ctx.cache) {
+        let role_str = args_copy.single::<String>()?;
+        if let Some(role) = guild.role_by_name(role_str.as_str()) {
+            rem_role = role.clone();
+        } else {
+            msg.reply(ctx, format!("Role {} not found in guild {}", role_str, guild.name)).await?;
+            return Ok(());
+        }
+    } else {
+        msg.reply(ctx, "Guild not found").await?;
+        return Ok(());
+    }
 
     let date_take = args_copy.single::<String>()?.clone();
     let date_str: Vec<&str> = date_take.split('/').collect();
@@ -176,8 +188,13 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     let ivl_qty_num = args_copy.single::<u32>()?;
 
     // get context data
-    let rem_auth = msg.author_nick(&ctx.http).await.unwrap();
-    let rem_channel_id = msg.channel_id;
+    let rem_auth: String;
+    if let Some(auth_str) = msg.author_nick(&ctx.http).await {  // get event requester nickname if possible
+        rem_auth = auth_str;
+    } else {
+        rem_auth = msg.author.name.clone();                             // otherwise get the requester name
+    }
+    let rem_channel_id = msg.channel_id;                     // get channel ID of the request
 
     // configure the DateTime for the first Reminder ping
     let first_poll = Local::now();
