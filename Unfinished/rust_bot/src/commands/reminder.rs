@@ -1,5 +1,7 @@
-// use serenity::framework::standard::macros::command;
-// use serenity::framework::standard::{Args, CommandResult};
+use crate::ReminderStorageWrapper;
+
+use serenity::framework::standard::macros::command;
+use serenity::framework::standard::{Args, CommandResult};
 use serenity::model::prelude::*;
 use serenity::utils::MessageBuilder;
 use serenity::prelude::*;
@@ -128,38 +130,102 @@ impl  Reminder {
     }
 }
 
-// Creates a reminder and installs it in the global ReminderStorage.
-// 
-// Command Arguments:
-// - Reminder event name
-// - Reminder message
-// - Reminder target mentions (members/roles)
-// - Reminder expiration date/time ("<year>/<month>/<day>/<hour>/<minute>/<second>")
-// - Reminder interval type ("year", "month", "day", etc.)
-// - Reminder interval length (whole number)
-// #[command]
-// async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-//     // check for all required arguments
-//     if args.len() != 7 {
-//         msg.reply(ctx, "Six arguments (event name, message, mentions, expiration deadline, interval type, interval length) required.").await?;
-//         return Ok(());
-//     }
+#[command]
+/// Creates a reminder and installs it in the global ReminderStorage.
+/// 
+/// Command Arguments:
+/// - Reminder event name
+/// - Reminder event message
+/// - Reminder target role
+/// - Reminder expiration date/time ("year/month/day/hour/minute/second")
+/// - Reminder interval type (day, hour, or minute (must be at least 10 minutes))
+/// - Reminder interval length (whole number)
+async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    // check for all required arguments
+    if args.len() != 7 {
+        msg.reply(ctx, "Six arguments (event name, message, mentioned role, expiration deadline, interval type, interval length) required.").await?;
+        return Ok(());
+    }
 
-//     // let 
+    let mut args_copy = args.clone();
 
-//     let reminder_lock = {
-//         let data_read = ctx.data.read().await;
-//         data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
-//     };
-//     let confirm = {
-//         let reminders = reminder_lock.write().await;
+    // parse arguments
+    let name_str = args_copy.single::<String>()?;
+    let msg_str = args_copy.single::<String>()?;
+    let guild = msg.guild(&ctx.cache).unwrap();
+    let rem_role = guild.role_by_name(args_copy.single::<String>()?.as_str()).unwrap().clone();
 
-//     };
+    let date_take = args_copy.single::<String>()?.clone();
+    let date_str: Vec<&str> = date_take.split('/').collect();
+    if date_str.len() != 6 {
+        msg.reply(ctx, &"Invalid expiration date formatting 
+            (requires <year>/<month>/<day>/<hour>/<minute>/<second>)".to_string()).await?;
+        return Ok(());
+    }
+    let xpr_datetime: DateTime<Local> = Local.with_ymd_and_hms(
+        date_str[0].parse::<i32>().unwrap(),
+        date_str[1].parse::<u32>().unwrap(),
+        date_str[2].parse::<u32>().unwrap(),
+        date_str[3].parse::<u32>().unwrap(),
+        date_str[4].parse::<u32>().unwrap(),
+        date_str[5].parse::<u32>().unwrap(),
+    ).unwrap();
 
+    let ivl_type_temp = args_copy.single::<String>()?;
+    let ivl_type_str = ivl_type_temp.as_str();
+    let ivl_qty_num = args_copy.single::<u32>()?;
 
+    // get context data
+    let rem_auth = msg.author_nick(&ctx.http).await.unwrap();
+    let rem_channel_id = msg.channel_id;
 
-//     Ok(())
-// }
+    // configure the DateTime for the first Reminder ping
+    let first_poll = Local::now();
+    match ivl_type_str {
+        "day" => first_poll.checked_add_signed(Duration::days(ivl_qty_num.into())).unwrap(),
+        "hour" => first_poll.checked_add_signed(Duration::hours(ivl_qty_num.into())).unwrap(),
+        "minute" => {
+            if ivl_qty_num < 10 {
+                msg.reply(ctx, "Invalid interval length, must be at least 10 minutes".to_string()).await?;
+                return Ok(());
+            }
+            first_poll.checked_add_signed(Duration::minutes(ivl_qty_num.into())).unwrap()
+        }
+        _ => {
+            msg.reply(ctx, "Invalid interval type (must be year, month, day, hour, or minute)".to_string()).await?;
+            return Ok(());
+        }
+    };
+
+    // read and update bot metadata
+    let reminder_lock = {
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        let assgn_id = reminders.next_rem_id;   // retrieve next ID to be assigned to the new reminder
+        let new_rem = Reminder::new(       // create new reminder
+            assgn_id,
+            name_str.clone(),
+            msg_str,
+            rem_auth,
+            rem_channel_id,
+            rem_role,
+            xpr_datetime,
+            ivl_type_str.to_string(),
+            ivl_qty_num,
+            first_poll,
+        );
+        reminders.reminders.insert(assgn_id, new_rem);  // insert new reminder into reminder scheduler
+        reminders.next_rem_id += 1;                          // update next reminder ID
+    }
+
+    msg.reply(ctx, &format!("Reminder for {} is set.", name_str)).await?;
+
+    Ok(())
+}
 
 // ///
 // #[command]

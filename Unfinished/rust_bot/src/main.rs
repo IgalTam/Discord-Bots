@@ -25,7 +25,7 @@ use tracing::error;
 use async_timer::Interval;
 
 use crate::commands::meta::*;
-use crate::commands::reminder::{Reminder, ReminderError};
+use crate::commands::reminder::{Reminder, ReminderError, SET_REMINDER_COMMAND};
 
 pub struct ShardManagerContainer;
 
@@ -98,7 +98,7 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
-            // println!("Received command interaction: {:#?}", command);
+            println!("Received command interaction: {:#?}", command);
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
@@ -175,8 +175,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-// #[commands(multiply, ping, quit)]
-#[commands(ping)]
+#[commands(ping, set_reminder)]
 struct General;
 
 #[tokio::main]
