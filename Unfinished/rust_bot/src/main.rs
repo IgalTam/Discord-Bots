@@ -25,7 +25,7 @@ use tracing::error;
 use async_timer::Interval;
 
 use crate::commands::meta::*;
-use crate::commands::reminder::{Reminder, ReminderError, SET_REMINDER_COMMAND};
+use crate::commands::reminder::*;
 
 pub struct ShardManagerContainer;
 
@@ -175,7 +175,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, set_reminder)]
+#[commands(ping, set_reminder, list_reminders)]
 struct General;
 
 #[tokio::main]

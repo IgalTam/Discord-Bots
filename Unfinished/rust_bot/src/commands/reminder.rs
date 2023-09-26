@@ -182,6 +182,10 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
         date_str[4].parse::<u32>().unwrap(),
         date_str[5].parse::<u32>().unwrap(),
     ).unwrap();
+    if xpr_datetime < Local::now() {
+        msg.reply(ctx, &"Invalid expiration date. Must be set after the current time.").await?;
+        return Ok(());
+    }
 
     let ivl_type_temp = args_copy.single::<String>()?;
     let ivl_type_str = ivl_type_temp.as_str();
@@ -251,12 +255,36 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
 //     Ok(())
 // }
 
-// ///
-// #[command]
-// async fn list_reminders(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+#[command]
+/// Lists all active reminders and their relevant metadata.
+async fn list_reminders(ctx: &Context, msg: &Message) -> CommandResult {
 
-//     Ok(())
-// }
+    // read and update bot metadata
+    let reminder_lock = {
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+
+    {
+        let reminders = reminder_lock.write().await;    // open mutex lock for writing
+
+        if reminders.reminders.is_empty() {
+            msg.reply(&ctx.http, "No reminders are currently scheduled.").await?;
+            return Ok(());
+        }
+
+        let mut output_message = String::new();
+        for (rem_id, rem) in &reminders.reminders {
+            output_message.push_str(format!("Reminder {rem_id}:\n\t\t{}, by {}.\n\t\tActive in {}.\n\t\tExpires on {}. \
+                \n\t\tPolling interval of {} {}(s).\n\t\tMessage: {}\n", 
+                rem.rem_name, rem.rem_author, rem.rem_channel_id.to_channel(&ctx.http).await?.to_string(), rem.rem_expire,
+                rem.rem_interval_qty, rem.rem_interval_type, rem.rem_msg).as_str());
+        }
+        msg.reply(&ctx.http, output_message).await?;
+    }
+
+    Ok(())
+}
 
 // ///
 // #[command]
