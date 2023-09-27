@@ -175,7 +175,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, set_reminder, list_reminders)]
+#[commands(ping, set_reminder, cancel_reminder, list_reminders)]
 struct General;
 
 #[tokio::main]

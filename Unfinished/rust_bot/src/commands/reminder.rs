@@ -248,12 +248,34 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     Ok(())
 }
 
-// ///
-// #[command]
-// async fn cancel_reminder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+#[command]
+/// Cancels an active reminder based on its ID (can be found by using ```list_reminders```).
+/// 
+/// Command Argument: Reminder ID (whole number).
+async fn cancel_reminder(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 1 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/cancel_reminder <reminderID>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
 
-//     Ok(())
-// }
+    // remove reminder from ReminderStorage
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(extr_rem) = reminders.reminders.remove(&targ_id) {
+            msg.reply(ctx, format!("Reminder {}: {} successfully descheduled.", targ_id, extr_rem.rem_name)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
+
+    Ok(())
+}
 
 #[command]
 /// Lists all active reminders and their relevant metadata.
@@ -274,10 +296,11 @@ async fn list_reminders(ctx: &Context, msg: &Message) -> CommandResult {
         }
 
         let mut output_message = String::new();
+        output_message.push_str("Active Reminders:\n\n");
         for (rem_id, rem) in &reminders.reminders {
-            output_message.push_str(format!("Reminder {rem_id}:\n\t\t{}, by {}.\n\t\tActive in {}.\n\t\tExpires on {}. \
-                \n\t\tPolling interval of {} {}(s).\n\t\tMessage: {}\n", 
-                rem.rem_name, rem.rem_author, rem.rem_channel_id.to_channel(&ctx.http).await?.to_string(), rem.rem_expire,
+            output_message.push_str(format!("ID: {rem_id}\n\t\t{}, by {}.\n\t\tTargeting {}.\n\t\tActive in {}.\n\t\tExpires on {}. \
+                \n\t\tPolling interval of {} {}(s).\n\t\tMessage: {}\n",
+                rem.rem_name, rem.rem_author, rem.rem_targ.name, rem.rem_channel_id.to_channel(&ctx.http).await?.to_string(), rem.rem_expire,
                 rem.rem_interval_qty, rem.rem_interval_type, rem.rem_msg).as_str());
         }
         msg.reply(&ctx.http, output_message).await?;
