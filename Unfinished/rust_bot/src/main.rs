@@ -79,9 +79,10 @@ impl ReminderStorage {
             if has_exp {    // the reminder has expired -> add its ID to the expired vector
                 expired.push(*rem_id);
             }
+            println!("polled reminder {}", rem_id);
         }
 
-        println!("polled all reminders");
+        // println!("polled all reminders");
         Ok(expired)
     }
 }
@@ -135,8 +136,6 @@ impl EventHandler for Handler {
                 .create_application_command(|command| commands::ping::register(command))
                 .create_application_command(|command| commands::set_reminder::register(command))
         }).await;
-        // println!("I now have the following guild slash commands: {:#?}", _commands);
-        // println!("set_reminder stuff: {:#?}", _commands[1].);
 
         // engage reminder handler
         let mut interval = Interval::platform_new(core::time::Duration::from_secs(60)); // polls all reminders every minute

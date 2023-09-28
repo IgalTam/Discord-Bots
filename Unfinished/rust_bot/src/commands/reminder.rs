@@ -56,9 +56,9 @@ impl  Reminder {
     /// Returns ```Ok(())``` on success, returns a ```ReminderError``` if an invalid ```rem_interval_type``` is stored.
     pub fn set_next_poll(&mut self) -> Result<(), ReminderError> {
         match self.rem_interval_type.as_str() {
-            "day"=> self.next_poll.checked_add_signed(Duration::days(self.rem_interval_qty.into())).unwrap(),
-            "hour" => self.next_poll.checked_add_signed(Duration::hours(self.rem_interval_qty.into())).unwrap(),
-            "minute" => self.next_poll.checked_add_signed(Duration::minutes(self.rem_interval_qty.into())).unwrap(),
+            "day"=> self.next_poll += Duration::days(self.rem_interval_qty.into()),
+            "hour" => self.next_poll += Duration::hours(self.rem_interval_qty.into()),
+            "minute" => self.next_poll += Duration::minutes(self.rem_interval_qty.into()),
             _ => return Err(ReminderError),
         };
         Ok(())
@@ -74,11 +74,12 @@ impl  Reminder {
     /// for further calculations.
     pub async fn expired(&self) -> (bool, bool, DateTime<Local>) {
         let cur_time = Local::now();
-        if self.rem_expire >= cur_time && self.next_poll >= cur_time {  
+        println!("cur_time: {}, rem_expire: {}, next_poll: {}", cur_time, self.rem_expire, self.next_poll);
+        if self.rem_expire <= cur_time && self.next_poll <= cur_time {  
             (true, true, cur_time)     // reminder has expired, needs to be posted
-        } else if self.rem_expire >= cur_time && self.next_poll < cur_time { 
+        } else if self.rem_expire <= cur_time && self.next_poll > cur_time { 
             (true, false, cur_time)     // reminder has expired, doesn't need to be posted
-        } else if self.rem_expire < cur_time && self.next_poll >= cur_time {
+        } else if self.rem_expire > cur_time && self.next_poll <= cur_time {
             (false, true, cur_time)     // reminder has not expired, needs to be posted
         } else {
             (false, false, cur_time)  // reminder has not expired, doesn't need to be posted
@@ -129,6 +130,12 @@ impl  Reminder {
         Ok(())
     }
 }
+
+// #[command]
+// /// Describes command usage and syntax.
+// async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+//     Ok(())
+// }
 
 #[command]
 /// Creates a reminder and installs it in the global ReminderStorage.
@@ -201,16 +208,16 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     let rem_channel_id = msg.channel_id;                     // get channel ID of the request
 
     // configure the DateTime for the first Reminder ping
-    let first_poll = Local::now();
+    let mut first_poll = Local::now();
     match ivl_type_str {
-        "day" => first_poll.checked_add_signed(Duration::days(ivl_qty_num.into())).unwrap(),
-        "hour" => first_poll.checked_add_signed(Duration::hours(ivl_qty_num.into())).unwrap(),
+        "day" => first_poll += Duration::days(ivl_qty_num.into()),
+        "hour" => first_poll += Duration::hours(ivl_qty_num.into()),
         "minute" => {
             if ivl_qty_num < 10 {
                 msg.reply(ctx, "Invalid interval length, must be at least 10 minutes".to_string()).await?;
                 return Ok(());
             }
-            first_poll.checked_add_signed(Duration::minutes(ivl_qty_num.into())).unwrap()
+            first_poll += Duration::minutes(ivl_qty_num.into());
         }
         _ => {
             msg.reply(ctx, "Invalid interval type (must be year, month, day, hour, or minute)".to_string()).await?;
@@ -243,7 +250,7 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
         reminders.next_rem_id += 1;                          // update next reminder ID
     }
 
-    msg.reply(ctx, &format!("Reminder for {} is set.", name_str)).await?;
+    msg.reply(ctx, &format!("Reminder for {} is set. Use \"list_reminders\" to see relevant metadata.", name_str)).await?;
 
     Ok(())
 }
