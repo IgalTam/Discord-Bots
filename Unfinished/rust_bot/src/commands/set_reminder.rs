@@ -1,3 +1,10 @@
+//! OLD
+//! Attempted slash command functionality for set_reminder command.
+//! Intakes the same arguments as the normal command variant, but operates as a slash command.
+//! 
+//! For eventual usage, remove the underscores from the function names for ```_run``` and ```_register```.
+
+
 use crate::commands::reminder::Reminder;
 use crate::ReminderStorageWrapper;
 
@@ -23,7 +30,7 @@ use tokio::runtime::Handle;
 /// - Reminder expiration date/time ("year/month/day/hour/minute/second")
 /// - Reminder interval type (day, hour, or minute (must be at least 10 minutes))
 /// - Reminder interval length (whole number)
-pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
+pub fn _run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
     // parse command arguments
     let event_name = options
         .get(0)
@@ -132,7 +139,7 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
     // enter the async runtime to update metadata
     let handle = Handle::current();
     let temp_rt = handle.enter();
-    futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
+    futures::executor::block_on(_run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
     drop(temp_rt);
     
     format!("Reminder for {} is set.", name_str)
@@ -142,7 +149,7 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
 /// 
 /// This code is separate from ```run()``` due to the use of ```futures::executor::block_on()``` to enter the main
 /// Tokio runtime from a synchronous function.
-async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
+async fn _run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
                          rem_role: &Role, xpr_datetime: DateTime<Local>, ivl_type_str: &str, ivl_qty_num: u32, first_poll: DateTime<Local>) {
     // read bot metadata
     let reminder_lock = {
@@ -171,8 +178,7 @@ async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: Ap
 }
 
 /// Registers ```set_reminder``` as a slash command, configures input formatting.
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    println!("start of set_reminder register");
+pub fn _register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command.name("set_reminder").description("Sets a reminder")
         .create_option(|option|{
             option

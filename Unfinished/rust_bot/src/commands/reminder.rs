@@ -1,3 +1,7 @@
+//! Reminder
+//! Contains the struct definition and implementations for Reminder, as well as
+//! all commands associated with scheduling and modifying Reminders.
+
 use crate::ReminderStorageWrapper;
 
 use serenity::framework::standard::macros::command;
@@ -13,20 +17,14 @@ use chrono::{
 #[derive(Debug)]
 pub struct ReminderError;
 
-// trait MentionShowable: Mentionable + std::fmt::Display {}
-
 /// Struct for storing reminder metadata.
 pub struct Reminder {
     _rem_id: u32,
     rem_name: String,
     rem_msg: String,
-    // rem_author: Member,
     rem_author: String,
-    // rem_channel: Channel,
     rem_channel_id: ChannelId,
-    // rem_targs: Vec<Role>,
     rem_targ: Role,
-    // rem_targs: Vec<String>,
     rem_expire: DateTime<Local>,
     rem_interval_type: String,
     rem_interval_qty: u32,
@@ -95,22 +93,15 @@ impl  Reminder {
         let remaining_duration = self.rem_expire - cur_time;
 
         // get String of mention targets
-        let mut mention_targs = String::new();        
-        // for targ in &self.rem_targs {
-        //     mention_targs.push('@');
-        //     mention_targs.push_str(&targ.name);
-        //     mention_targs.push(' ');
-        // }
+        let mut mention_targs = String::new();
         mention_targs.push_str(&self.rem_targ.to_string());
 
         // build reminder message
         let post = MessageBuilder::new()
             .push(&self.rem_name)
             .push("\nReminder set by ")
-            // .mention(&self.rem_author)
             .push(&self.rem_author)
             .push("for ")
-            // .mention(&self.rem_targs)
             .push(&mention_targs)
             .push(":\n")
             .push(&self.rem_msg)
@@ -131,11 +122,24 @@ impl  Reminder {
     }
 }
 
-// #[command]
+#[command]
 // /// Describes command usage and syntax.
-// async fn help(ctx: &Context, msg: &Message) -> CommandResult {
-//     Ok(())
-// }
+async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(ctx,
+        "This bot maintains a schedule of reminders that periodically ping in indicated channels \
+        to remind a target group of an upcoming event.\nAvailable commands:\n\n \
+        **help (this command)**: provides information on bot usage.\n\n \
+        **set_reminder** `<event name> <event message> <name of target role> <expiration date (of the form \
+        <year>/<month>/<day>/<hour>/<minute>/<second>)> <interval type (day, hour, or minute)> <interval length \
+        (whole number)>`:\n\tcreates and schedules a new Reminder that will mention members of a specific role on the \
+        specified interval. This interval cannot be less than 10 minutes.\n\n \
+        **list_reminders**: lists all actively scheduled reminders and relevant metadata, including reminder IDs.\n\n \
+        **cancel_reminder** `<ID>`: deschedules the reminder with the inputted ID, if able.\n\n \
+        "
+    ).await?;
+
+    Ok(())
+}
 
 #[command]
 /// Creates a reminder and installs it in the global ReminderStorage.

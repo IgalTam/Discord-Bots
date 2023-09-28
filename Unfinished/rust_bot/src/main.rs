@@ -1,5 +1,9 @@
-//! Reminder Bot
-//! A Rust-based Discord bot that creates reminders for events, each of which ping people/roles on a configurable interval until the reminder expires.
+//! Reminder Bot [final name TBD]
+//! A Rust-based Discord bot that allows for the creation of reminders for events, each of which ping a
+//!  specific role on a configurable interval until the reminder expires.
+//! 
+//! Note that all long-term data storage is facilitated within program memory, so stopping the bot
+//! will also wipe any active reminders.
 
 mod commands;
 
@@ -97,13 +101,12 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
 
+    // slash command handling
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
-            println!("Received command interaction: {:#?}", command);
-
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()),
+                // "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()), // currently non-functional
                 _ => "not implemented".to_string(),
             };
 
@@ -120,7 +123,7 @@ impl EventHandler for Handler {
         }
     }
 
-    // initializes slash commands asynchronous handler for polling stored reminders
+    // initializes slash commands and asynchronous handler for polling stored reminders
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.name);
 
@@ -134,7 +137,7 @@ impl EventHandler for Handler {
         let _commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::ping::register(command))
-                .create_application_command(|command| commands::set_reminder::register(command))
+                // .create_application_command(|command| commands::set_reminder::register(command)) // currently non-functional
         }).await;
 
         // engage reminder handler
@@ -174,10 +177,11 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, set_reminder, cancel_reminder, list_reminders)]
+#[commands(help, ping, set_reminder, cancel_reminder, list_reminders)]
 struct General;
 
 #[tokio::main]
+/// Main bot program. Adapted from Serenity GitHub examples.
 async fn main() {
     // This will load the environment variables located at `./.env`, relative to
     // the CWD. See `./.env.example` for an example on how to structure this.
