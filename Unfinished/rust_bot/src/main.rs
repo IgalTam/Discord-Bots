@@ -6,6 +6,7 @@
 //! will also wipe any active reminders.
 
 mod commands;
+use crate::commands::reminder::*;
 
 use std::collections::HashSet;
 use std::env;
@@ -28,14 +29,13 @@ use serenity::prelude::*;
 use tracing::error;
 use async_timer::Interval;
 
-use crate::commands::reminder::*;
-
 pub struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {
     type Value = Arc<Mutex<ShardManager>>;
 }
 
+/// Struct for storing the bot's command prefix in global data.
 pub struct PrefixContainer;
 
 impl TypeMapKey for PrefixContainer {
@@ -88,7 +88,6 @@ impl ReminderStorage {
             if has_exp {    // the reminder has expired -> add its ID to the expired vector
                 expired.push(*rem_id);
             }
-            println!("polled reminder {}", rem_id);
         }
 
         // println!("polled all reminders");
@@ -184,7 +183,9 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(help, set_reminder, cancel_reminder, list_reminders)]
+#[commands(help, set_reminder, cancel_reminder, list_reminders,
+        update_reminder_name, update_reminder_message, update_reminder_target,
+        update_reminder_expiration)]
 struct General;
 
 #[tokio::main]

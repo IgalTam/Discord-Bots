@@ -72,7 +72,6 @@ impl  Reminder {
     /// for further calculations.
     pub async fn expired(&self) -> (bool, bool, DateTime<Local>) {
         let cur_time = Local::now();
-        println!("cur_time: {}, rem_expire: {}, next_poll: {}", cur_time, self.rem_expire, self.next_poll);
         if self.rem_expire <= cur_time && self.next_poll <= cur_time {  
             (true, true, cur_time)     // reminder has expired, needs to be posted
         } else if self.rem_expire <= cur_time && self.next_poll > cur_time { 
@@ -106,12 +105,12 @@ impl  Reminder {
             .push(":\n")
             .push(&self.rem_msg)
             .push("\nEvent set for ")
-            .push(&remaining_duration)
+            .push(&remaining_duration.to_string())
             .push(" (reminding every ")
             .push(self.rem_interval_qty)
             .push(" ")
             .push(&self.rem_interval_type)
-            .push(").")
+            .push("(s)).")
             .build();
 
         // post reminder message
@@ -122,19 +121,31 @@ impl  Reminder {
     }
 }
 
+/// Extracts the string contained within quotation marks (used for argument parsing).
+/// 
+/// Ex: assert_eq!(trim_quotes("\"arg_in_quotes\""), "arg_in_quotes");
+fn trim_quotes(arg: String) -> String {
+    arg.split("\"").collect()
+}
+
 #[command]
-// /// Describes command usage and syntax.
+/// Describes command usage and syntax.
 async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(ctx,
         "This bot maintains a schedule of reminders that periodically ping in indicated channels \
         to remind a target group of an upcoming event.\nAvailable commands:\n\n \
         **help (this command)**: provides information on bot usage.\n\n \
-        **set_reminder** `<event name> <event message> <name of target role> <expiration date (of the form \
-        <year>/<month>/<day>/<hour>/<minute>/<second>)> <interval type (day, hour, or minute)> <interval length \
+        **set_reminder** `\"<event name>\" \"<event message>\" \"<name of target role>\" <expiration date (of the form \
+        <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)> <interval type (day, hour, or minute)> <interval length \
         (whole number)>`:\n\tcreates and schedules a new Reminder that will mention members of a specific role on the \
         specified interval. This interval cannot be less than 10 minutes.\n\n \
         **list_reminders**: lists all actively scheduled reminders and relevant metadata, including reminder IDs.\n\n \
         **cancel_reminder** `<ID>`: deschedules the reminder with the inputted ID, if able.\n\n \
+        **update_reminder_name** `<ID> <new name>`: updates the specified reminder's event name.\n\n \
+        **update_reminder_msg** `<ID> <new message>`: updates the specified reminder's event message.\n\n \
+        **update_reminder_target** `<ID> <new target role>`: updates the specified reminder's targeted role.\n\n \
+        **update_reminder_expiration** `<ID> <expiration date (of the form \
+            <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)>`: updates the specified reminder's expiration date and time.\n\n \
         "
     ).await?;
 
@@ -161,12 +172,12 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     let mut args_copy = args.clone();
 
     // parse arguments
-    let name_str = args_copy.single::<String>()?;
-    let msg_str = args_copy.single::<String>()?;
+    let name_str = trim_quotes(args_copy.single::<String>()?);
+    let msg_str = trim_quotes(args_copy.single::<String>()?);
 
     let rem_role: Role;
     if let Some(guild) = msg.guild(&ctx.cache) {
-        let role_str = args_copy.single::<String>()?;
+        let role_str = trim_quotes(args_copy.single::<String>()?);
         if let Some(role) = guild.role_by_name(role_str.as_str()) {
             rem_role = role.clone();
         } else {
@@ -182,7 +193,7 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     let date_str: Vec<&str> = date_take.split('/').collect();
     if date_str.len() != 6 {
         msg.reply(ctx, &"Invalid expiration date formatting 
-            (requires <year>/<month>/<day>/<hour>/<minute>/<second>)".to_string()).await?;
+            (requires <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)".to_string()).await?;
         return Ok(());
     }
     let xpr_datetime: DateTime<Local> = Local.with_ymd_and_hms(
@@ -254,7 +265,7 @@ async fn set_reminder(ctx: &Context, msg: &Message, args: Args) -> CommandResult
         reminders.next_rem_id += 1;                          // update next reminder ID
     }
 
-    msg.reply(ctx, &format!("Reminder for {} is set. Use \"list_reminders\" to see relevant metadata.", name_str)).await?;
+    msg.reply(ctx, &format!("Reminder for {} is set. Use **list_reminders** to see relevant metadata.", name_str)).await?;
 
     Ok(())
 }
@@ -320,30 +331,178 @@ async fn list_reminders(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-// ///
-// #[command]
-// async fn update_reminder_message(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+#[command]
+/// Updates the `event name` field of the specified reminder.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder Name
+async fn update_reminder_name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 2 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_name <reminderID> <new_name>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+    let new_rem_name = trim_quotes(args.single::<String>()?);
 
-//     Ok(())
-// }
+    // update target Reminder's name field
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_name = new_rem_name;
+            msg.reply(ctx, format!("Reminder {}: Event name successfully changed to {}.", targ_id, targ_rem.rem_name)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
 
-// ///
-// #[command]
-// async fn update_reminder_targets(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    Ok(())
+}
 
-//     Ok(())
-// }
+#[command]
+/// Updates the `event message` field of the specified reminder.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder Name
+async fn update_reminder_message(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 2 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_message <reminderID> <new_message>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+    let new_rem_msg = trim_quotes(args.single::<String>()?);
 
-// ///
-// #[command]
-// async fn update_reminder_deadline(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // update target Reminder's event message field
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_msg = new_rem_msg;
+            msg.reply(ctx, format!("Reminder {}: Event message successfully changed to {}.", targ_id, targ_rem.rem_msg)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
 
-//     Ok(())
-// }
+    Ok(())
+}
+
+#[command]
+/// Updates the target role of the specified reminder.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder Target Role name (must be an actual Role in the guild)
+async fn update_reminder_target(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 2 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_message <reminderID> <name_of_role>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+    let new_rem_role: Role;
+    if let Some(guild) = msg.guild(&ctx.cache) {
+        let role_str = trim_quotes(args.single::<String>()?);
+        if let Some(role) = guild.role_by_name(role_str.as_str()) {
+            new_rem_role = role.clone();
+        } else {
+            msg.reply(ctx, format!("Role {} not found in guild {}", role_str, guild.name)).await?;
+            return Ok(());
+        }
+    } else {
+        msg.reply(ctx, "Guild not found").await?;
+        return Ok(());
+    }
+
+    // update target Reminder's target role field
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_targ = new_rem_role;
+            msg.reply(ctx, format!("Reminder {}: Target role successfully changed to {}.", targ_id, targ_rem.rem_targ.name)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
+
+    Ok(())
+}
+
+#[command]
+/// Updates the expiration deadline of the specified reminder.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder expiration date/time ("year/month/day/hour/minute/second")
+async fn update_reminder_expiration(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 2 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_message <reminderID> <<YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+    let date_take = args.single::<String>()?.clone();
+    let date_str: Vec<&str> = date_take.split('/').collect();
+    if date_str.len() != 6 {
+        msg.reply(ctx, &"Invalid expiration date formatting 
+            (requires <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)".to_string()).await?;
+        return Ok(());
+    }
+    let new_xpr_datetime: DateTime<Local> = Local.with_ymd_and_hms(
+        date_str[0].parse::<i32>().unwrap(),
+        date_str[1].parse::<u32>().unwrap(),
+        date_str[2].parse::<u32>().unwrap(),
+        date_str[3].parse::<u32>().unwrap(),
+        date_str[4].parse::<u32>().unwrap(),
+        date_str[5].parse::<u32>().unwrap(),
+    ).unwrap();
+    if new_xpr_datetime < Local::now() {
+        msg.reply(ctx, &"Invalid expiration date. Must be set after the current time.").await?;
+        return Ok(());
+    }
+
+    // update target Reminder's expiration date/time field
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_expire = new_xpr_datetime;
+            msg.reply(ctx, format!("Reminder {}: Expiration deadline successfully changed to {}.", targ_id, targ_rem.rem_expire)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
+
+    Ok(())
+}
 
 // ///
 // #[command]
 // async fn update_reminder_interval(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+
+//     Ok(())
+// }
+
+// #[command]
+// ///
+// async fn update_reminder_channel(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
 
 //     Ok(())
 // }
