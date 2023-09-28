@@ -28,13 +28,18 @@ use serenity::prelude::*;
 use tracing::error;
 use async_timer::Interval;
 
-use crate::commands::meta::*;
 use crate::commands::reminder::*;
 
 pub struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {
     type Value = Arc<Mutex<ShardManager>>;
+}
+
+pub struct PrefixContainer;
+
+impl TypeMapKey for PrefixContainer {
+    type Value = Arc<String>;
 }
 
 // #[derive(IndexMut)]
@@ -106,6 +111,7 @@ impl EventHandler for Handler {
         if let Interaction::ApplicationCommand(command) = interaction {
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
+                "help" => commands::help::run(&command.data.options, &ctx),
                 // "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()), // currently non-functional
                 _ => "not implemented".to_string(),
             };
@@ -137,6 +143,7 @@ impl EventHandler for Handler {
         let _commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::ping::register(command))
+                .create_application_command(|command| commands::help::register(command))
                 // .create_application_command(|command| commands::set_reminder::register(command)) // currently non-functional
         }).await;
 
@@ -177,7 +184,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(help, ping, set_reminder, cancel_reminder, list_reminders)]
+#[commands(help, set_reminder, cancel_reminder, list_reminders)]
 struct General;
 
 #[tokio::main]
@@ -188,6 +195,7 @@ async fn main() {
     dotenv::dotenv().expect("Failed to load .env file");
 
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let prefix = env::var("PREFIX").expect("Expected a prefix in the environment");
 
     let http = Http::new(&token);
 
@@ -204,7 +212,7 @@ async fn main() {
 
     // Create the framework
     let framework =
-        StandardFramework::new().configure(|c| c.owners(owners).prefix("/%/")).group(&GENERAL_GROUP);
+        StandardFramework::new().configure(|c| c.owners(owners).prefix(prefix.clone())).group(&GENERAL_GROUP);
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
@@ -220,6 +228,7 @@ async fn main() {
     {
         let mut data = client.data.write().await;
         data.insert::<ShardManagerContainer>(client.shard_manager.clone());
+        data.insert::<PrefixContainer>(Arc::new(prefix.to_string()));
         data.insert::<ReminderStorageWrapper>(Arc::new(RwLock::new(ReminderStorage::new())));
     }
 
