@@ -64,33 +64,25 @@ impl  Reminder {
 
     /// Checks if the Reminder deadline has expired.
     /// 
-    /// Returns a tuple of the form ```(has_expired, needs_post, current_time)```.
+    /// Returns a tuple of the form ```(has_expired, needs_post)```.
     /// ```has_expired``` is a boolean indicating whether the Reminder has expired 
     /// (its expiration DateTime is greater than the current DateTime). ```needs_post```
     /// is a boolean indicates whether the Reminder should be posted (with ```post_reminder```).
-    /// ```current_time``` is the current DateTime object obtained in this method, passed along
-    /// for further calculations.
-    pub async fn expired(&self) -> (bool, bool, DateTime<Local>) {
+    pub async fn expired(&self) -> (bool, bool) {
         let cur_time = Local::now();
         if self.rem_expire <= cur_time && self.next_poll <= cur_time {  
-            (true, true, cur_time)     // reminder has expired, needs to be posted
+            (true, true)     // reminder has expired, needs to be posted
         } else if self.rem_expire <= cur_time && self.next_poll > cur_time { 
-            (true, false, cur_time)     // reminder has expired, doesn't need to be posted
+            (true, false)     // reminder has expired, doesn't need to be posted
         } else if self.rem_expire > cur_time && self.next_poll <= cur_time {
-            (false, true, cur_time)     // reminder has not expired, needs to be posted
+            (false, true)     // reminder has not expired, needs to be posted
         } else {
-            (false, false, cur_time)  // reminder has not expired, doesn't need to be posted
+            (false, false)  // reminder has not expired, doesn't need to be posted
         }
     }
 
     /// Posts the Reminder's stored message to the stored Channel.
-    pub async fn post_reminder(&self, ctx: &Context, cur_time: DateTime<Local>) -> Result<(), ReminderError> {
-        // evaluate remaining duration on timer
-        if self.rem_expire < cur_time {
-            return Err(ReminderError);
-        }
-        let remaining_duration = self.rem_expire - cur_time;
-
+    pub async fn post_reminder(&self, ctx: &Context) -> Result<(), ReminderError> {
         // get String of mention targets
         let mut mention_targs = String::new();
         mention_targs.push_str(&self.rem_targ.to_string());
@@ -104,8 +96,8 @@ impl  Reminder {
             .push(&mention_targs)
             .push(":\n")
             .push(&self.rem_msg)
-            .push("\nEvent set for ")
-            .push(&remaining_duration.to_string())
+            .push("\nReminder expires on ")
+            .push(&self.rem_expire)
             .push(" (reminding every ")
             .push(self.rem_interval_qty)
             .push(" ")
@@ -136,9 +128,9 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         to remind a target group of an upcoming event.\nAvailable commands:\n\n \
         **help (this command)**: provides information on bot usage.\n\n \
         **set_reminder** `\"<event name>\" \"<event message>\" \"<name of target role>\" <expiration date (of the form \
-        <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)> <interval type (day, hour, or minute)> <interval length \
+        <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)> <posting interval type (day, hour, or minute)> <posting interval length \
         (whole number)>`:\n\tcreates and schedules a new Reminder that will mention members of a specific role on the \
-        specified interval. This interval cannot be less than 10 minutes.\n\n \
+        specified interval. The expiration date should be in 24 hour form. The posting interval cannot be less than 10 minutes.\n\n \
         **list_reminders**: lists all actively scheduled reminders and relevant metadata, including reminder IDs.\n\n \
         **cancel_reminder** `<ID>`: deschedules the reminder with the inputted ID, if able.\n\n \
         **update_reminder_name** `<ID> <new name>`: updates the specified reminder's event name.\n\n \
@@ -146,6 +138,10 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
         **update_reminder_target** `<ID> <new target role>`: updates the specified reminder's targeted role.\n\n \
         **update_reminder_expiration** `<ID> <expiration date (of the form \
             <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)>`: updates the specified reminder's expiration date and time.\n\n \
+        **update_reminder_interval** `<ID> <new interval type (day/hour/minute)> <new interval quantity>`: updates \
+            the specified reminder's posting interval. The new interval cannot be less than 10 minutes.\n\n \
+        **update_reminder_channel** `<ID> <new channel name>`: updates the reminder's channel for posting location. \
+            By default, this channel is the one that the reminder's **set_reminder** was originally called in.
         "
     ).await?;
 
@@ -406,7 +402,7 @@ async fn update_reminder_message(ctx: &Context, msg: &Message,  mut args: Args) 
 async fn update_reminder_target(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
     // parse arguments
     if args.len() != 2 {
-        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_message <reminderID> <name_of_role>.\"").await?;
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_target <reminderID> <name_of_role>.\"").await?;
         return Ok(());
     }
     let targ_id = args.single::<u32>()?;
@@ -451,7 +447,7 @@ async fn update_reminder_target(ctx: &Context, msg: &Message,  mut args: Args) -
 async fn update_reminder_expiration(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
     // parse arguments
     if args.len() != 2 {
-        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_message <reminderID> <<YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>>.\"").await?;
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_expiration <reminderID> <<YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>>.\"").await?;
         return Ok(());
     }
     let targ_id = args.single::<u32>()?;
@@ -493,16 +489,89 @@ async fn update_reminder_expiration(ctx: &Context, msg: &Message,  mut args: Arg
     Ok(())
 }
 
-// ///
-// #[command]
-// async fn update_reminder_interval(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+#[command]
+/// Updates the posting interval of the specified reminder. This change will not take effect
+/// until the subsequent next posting of the reminder.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder Interval Type (day/hour/minute)
+/// - New Reminder Interval Quantity (if type is "minute", this field cannot be less than 10)
+async fn update_reminder_interval(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 3 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_interval <reminderID> <day/hour/minute> <number>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+    let new_ivl_type = args.single::<String>()?;
+    let new_ivl_qty_num = args.single::<u32>()?;
 
-//     Ok(())
-// }
+    // update target Reminder's interval type and quantity fields
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_interval_type = new_ivl_type;
+            targ_rem.rem_interval_qty = new_ivl_qty_num;
+            msg.reply(ctx, format!("Reminder {}: Interval successfully changed to {} {}(s).", 
+                targ_id, targ_rem.rem_interval_qty, targ_rem.rem_interval_type)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
 
-// #[command]
-// ///
-// async fn update_reminder_channel(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    Ok(())
+}
 
-//     Ok(())
-// }
+#[command]
+/// Updates the channel of the specified reminder. The default reminder channel is the one that ```set_reminder```
+/// is initially called in.
+/// 
+/// Command Arguments:
+/// - Reminder ID (can be found with `list_reminders`)
+/// - New Reminder Channel name (must be a text channel) 
+async fn update_reminder_channel(ctx: &Context, msg: &Message,  mut args: Args) -> CommandResult {
+    // parse arguments
+    if args.len() != 2 {
+        msg.reply(ctx, "Invalid number of arguments. Usage: \"/%/update_reminder_channel <reminderID> <text channel name>.\"").await?;
+        return Ok(());
+    }
+    let targ_id = args.single::<u32>()?;
+
+    // find the new channel by ID, if able
+    let chnl_name = trim_quotes(args.single::<String>()?);
+    let new_chnl_id: ChannelId;
+    if let Some(guild) = msg.guild(&ctx.cache) {
+        if let Some(chnl_id) = guild.channel_id_from_name(&ctx.cache, chnl_name.clone()) {
+            new_chnl_id = chnl_id.clone();
+        } else {
+            msg.reply(ctx, format!("Channel {} not found in guild {}", chnl_name, guild.name)).await?;
+            return Ok(());
+        }
+    } else {
+        msg.reply(ctx, "Guild not found").await?;
+        return Ok(());
+    }
+
+    // update target Reminder's channel ID field
+    let reminder_lock = {   // read and update bot metadata
+        let data_read = ctx.data.read().await;
+        data_read.get::<ReminderStorageWrapper>().expect("Expected ReminderStorageWrapper in TypeMap.").clone()
+    };
+    {
+        let mut reminders = reminder_lock.write().await;    // open mutex lock for writing
+        if let Some(mut targ_rem) = reminders.reminders.get_mut(&targ_id) {
+            targ_rem.rem_channel_id = new_chnl_id;
+            msg.reply(ctx, format!("Reminder {}: Reminder channel successfully changed to {}.", 
+                targ_id, chnl_name)).await?;
+        } else {
+            msg.reply(ctx, format!("Reminder {} not found in scheduler.", targ_id)).await?;
+        }
+    }
+
+    Ok(())
+}

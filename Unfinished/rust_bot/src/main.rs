@@ -69,9 +69,9 @@ impl ReminderStorage {
     async fn poll_reminders(&mut self, ctx: &Context) -> Result<Vec<u32>, ReminderError> {
         let mut expired: Vec<u32> = vec!();
         for (rem_id, reminder) in &mut self.reminders {
-            let (has_exp, has_post, cur_time) = reminder.expired().await;
+            let (has_exp, has_post) = reminder.expired().await;
             if has_post {   // the reminder is ready to be posted
-                match reminder.post_reminder(ctx, cur_time).await {
+                match reminder.post_reminder(ctx).await {
                     Err(e) => {
                         println!("Error encountered while polling reminders: {:?}", e);
                         return Err(e);
@@ -185,7 +185,7 @@ impl EventHandler for Handler {
 #[group]
 #[commands(help, set_reminder, cancel_reminder, list_reminders,
         update_reminder_name, update_reminder_message, update_reminder_target,
-        update_reminder_expiration)]
+        update_reminder_expiration, update_reminder_interval, update_reminder_channel)]
 struct General;
 
 #[tokio::main]
