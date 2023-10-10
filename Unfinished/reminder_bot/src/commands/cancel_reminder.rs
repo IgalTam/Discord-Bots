@@ -1,3 +1,7 @@
+//! Slash command functionality for `cancel_reminder` command.
+//! 
+//! This command deschedules a scheduled Reminder instance, if able.
+
 use crate::ReminderStorageWrapper;
 
 use serenity::builder::CreateApplicationCommand;

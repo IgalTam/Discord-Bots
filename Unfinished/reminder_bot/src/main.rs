@@ -111,8 +111,9 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
                 "help" => commands::help::run(&command.data.options, &ctx),
-                "cancel_reminder" => commands::cancel_reminder::run(&command.data.options, &ctx),
                 "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()),
+                "cancel_reminder" => commands::cancel_reminder::run(&command.data.options, &ctx),
+                "list_reminders" => commands::list_reminders::run(&ctx),
                 _ => "not implemented".to_string(),
             };
 
@@ -142,6 +143,7 @@ impl EventHandler for Handler {
                     .create_application_command(|command| commands::help::register(command))
                     .create_application_command(|command| commands::cancel_reminder::register(command))
                     .create_application_command(|command| commands::set_reminder::register(command))
+                    .create_application_command(|command| commands::list_reminders::register(command))
             }).await.unwrap();
         }
 

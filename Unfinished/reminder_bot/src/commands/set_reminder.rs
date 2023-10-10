@@ -1,9 +1,6 @@
-//! OLD
-//! Attempted slash command functionality for set_reminder command.
-//! Intakes the same arguments as the normal command variant, but operates as a slash command.
+//! Slash command functionality for set_reminder command.
 //! 
-//! For eventual usage, remove the underscores from the function names for ```_run``` and ```_register```.
-
+//! This command configures a new Reminder instance, which will then be installed into the scheduler.
 
 use crate::commands::reminder::Reminder;
 use crate::ReminderStorageWrapper;
@@ -27,9 +24,10 @@ use tokio::runtime::Handle;
 /// - Reminder event name
 /// - Reminder event message
 /// - Reminder target role
-/// - Reminder expiration date/time ("year/month/day/hour/minute/second")
+/// - Reminder expiration date/time ("YYYY/MM/DD/HH/MM/SS")
 /// - Reminder interval type (day, hour, or minute (must be at least 10 minutes))
 /// - Reminder interval length (whole number)
+/// - Reminder first poll date/time (optional, "YYYY/MM/DD/HH/MM/SS")
 pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
     // parse command arguments
     let event_name = options
@@ -127,20 +125,44 @@ pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComma
     }
 
     // configure the DateTime for the first Reminder ping
-    let mut first_poll = Local::now();
-    match ivl_type_str {
-        "day" => first_poll += Duration::days(ivl_qty_num.into()),
-        "hour" => first_poll += Duration::hours(ivl_qty_num.into()),
-        "minute" => {
-            if ivl_qty_num < 10 {
-                return "Invalid interval length, must be at least 10 minutes".to_string();
+    let mut first_poll: DateTime<Local>;
+    if let Some(arg) = options.get(6) {
+        // if a date was passed in, parse it
+        let date_str: Vec<&str>;
+        if let CommandDataOptionValue::String(date) = arg.resolved.as_ref().expect("Expected String object") {
+            date_str = date.split('/').collect();
+            if date_str.len() != 6 {
+                return "Invalid expiration date formatting 
+                        (requires <year>/<month>/<day>/<hour>/<minute>/<second>)".to_string();
             }
-            first_poll += Duration::minutes(ivl_qty_num.into());
+        } else {
+            return "Invalid expiration date".to_string();
         }
-        _ => {
-            return "Invalid interval type (must be year, month, day, hour, or minute)".to_string();
-        }
-    };
+        first_poll = Local.with_ymd_and_hms(
+            date_str[0].parse::<i32>().unwrap(),
+            date_str[1].parse::<u32>().unwrap(),
+            date_str[2].parse::<u32>().unwrap(),
+            date_str[3].parse::<u32>().unwrap(),
+            date_str[4].parse::<u32>().unwrap(),
+            date_str[5].parse::<u32>().unwrap(),
+        ).unwrap();
+    } else {
+        // otherwise, generate a starting date based on polling interval
+        first_poll = Local::now();
+        match ivl_type_str {
+            "day" => first_poll += Duration::days(ivl_qty_num.into()),
+            "hour" => first_poll += Duration::hours(ivl_qty_num.into()),
+            "minute" => {
+                if ivl_qty_num < 10 {
+                    return "Invalid interval length, must be at least 10 minutes".to_string();
+                }
+                first_poll += Duration::minutes(ivl_qty_num.into());
+            }
+            _ => {
+                return "Invalid interval type (must be year, month, day, hour, or minute)".to_string();
+            }
+        };
+    }
 
     // enter the async runtime to update metadata
     let handle = Handle::current();
@@ -227,6 +249,13 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .description("The quantity of the interval type between reminder pings (number).")
                 .kind(CommandOptionType::Integer)
                 .required(true)
+        })
+        .create_option(|option| {
+            option
+                .name("first_poll_time")
+                .description("The first time this reminder will be polled (optional, <YYYY/MM/DD/HH/MM/SS>).")
+                .kind(CommandOptionType::String)
+                .required(false)
         })
 
 }

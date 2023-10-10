@@ -21,13 +21,13 @@ pub struct ReminderError;
 pub struct Reminder {
     _rem_id: u32,
     pub rem_name: String,
-    rem_msg: String,
-    rem_author: String,
-    rem_channel_id: ChannelId,
-    rem_targ: Role,
-    rem_expire: DateTime<Local>,
-    rem_interval_type: String,
-    rem_interval_qty: u32,
+    pub rem_msg: String,
+    pub rem_author: String,
+    pub rem_channel_id: ChannelId,
+    pub rem_targ: Role,
+    pub rem_expire: DateTime<Local>,
+    pub rem_interval_type: String,
+    pub rem_interval_qty: u32,
     next_poll: DateTime<Local>,
 }
 

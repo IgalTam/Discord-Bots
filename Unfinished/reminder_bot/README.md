@@ -11,7 +11,6 @@ Alternatively, use ```cargo build``` to compile the code and dependencies.
 ```
 DISCORD_TOKEN="<your bot token>"
 RUST_LOG=debug
-GUILD_ID=<ID of guild that this bot will operate in (used for slash commands)>
 PREFIX="<command prefix of your choice>"
 ```
 4) Currently, Reminder Bot uses prefix commands, with a few utility slash commands. Use the slash command ```help``` within a guild to see the full list of
