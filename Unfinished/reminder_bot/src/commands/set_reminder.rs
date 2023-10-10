@@ -30,7 +30,7 @@ use tokio::runtime::Handle;
 /// - Reminder expiration date/time ("year/month/day/hour/minute/second")
 /// - Reminder interval type (day, hour, or minute (must be at least 10 minutes))
 /// - Reminder interval length (whole number)
-pub fn _run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
+pub fn run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationCommandInteraction) -> String {
     // parse command arguments
     let event_name = options
         .get(0)
@@ -116,30 +116,36 @@ pub fn _run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComm
         .as_ref()
         .expect("Expected Integer object");
     let ivl_qty_num: u32;
-    if let CommandDataOptionValue::String(qty_str) = ivl_qty {
-        ivl_qty_num = qty_str.parse::<u32>().unwrap();
+    if let CommandDataOptionValue::Integer(qty_str) = ivl_qty {
+        if let Ok(val) = u32::try_from(*qty_str) {
+            ivl_qty_num = val;
+        } else {
+            return "Invalid interval quantity".to_string();
+        }
     } else {
         return "Missing interval quantity".to_string();
     }
 
     // configure the DateTime for the first Reminder ping
-    let first_poll = Local::now();
+    let mut first_poll = Local::now();
     match ivl_type_str {
-        "day" => first_poll.checked_add_signed(Duration::days(ivl_qty_num.into())).unwrap(),
-        "hour" => first_poll.checked_add_signed(Duration::hours(ivl_qty_num.into())).unwrap(),
+        "day" => first_poll += Duration::days(ivl_qty_num.into()),
+        "hour" => first_poll += Duration::hours(ivl_qty_num.into()),
         "minute" => {
             if ivl_qty_num < 10 {
                 return "Invalid interval length, must be at least 10 minutes".to_string();
             }
-            first_poll.checked_add_signed(Duration::minutes(ivl_qty_num.into())).unwrap()
+            first_poll += Duration::minutes(ivl_qty_num.into());
         }
-        _ => return "Invalid interval type (must be year, month, day, hour, or minute)".to_string(),
+        _ => {
+            return "Invalid interval type (must be year, month, day, hour, or minute)".to_string();
+        }
     };
 
     // enter the async runtime to update metadata
     let handle = Handle::current();
     let temp_rt = handle.enter();
-    futures::executor::block_on(_run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
+    futures::executor::block_on(run_ctx_handler(ctx, name_str, msg_str, inter, rem_role, xpr_datetime, ivl_type_str, ivl_qty_num, first_poll));
     drop(temp_rt);
     
     format!("Reminder for {} is set.", name_str)
@@ -149,7 +155,7 @@ pub fn _run(options: &[CommandDataOption], ctx: &Context, inter: ApplicationComm
 /// 
 /// This code is separate from ```run()``` due to the use of ```futures::executor::block_on()``` to enter the main
 /// Tokio runtime from a synchronous function.
-async fn _run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
+async fn run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: ApplicationCommandInteraction,
                          rem_role: &Role, xpr_datetime: DateTime<Local>, ivl_type_str: &str, ivl_qty_num: u32, first_poll: DateTime<Local>) {
     // read bot metadata
     let reminder_lock = {
@@ -178,48 +184,48 @@ async fn _run_ctx_handler(ctx: &Context, name_str: &str, msg_str: &str, inter: A
 }
 
 /// Registers ```set_reminder``` as a slash command, configures input formatting.
-pub fn _register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command.name("set_reminder").description("Sets a reminder")
         .create_option(|option|{
             option
-                .name("Event Name")
+                .name("event_name")
                 .description("The name of the event.")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
             option    
-                .name("Event Message")
+                .name("event_message")
                 .description("The message to be shown on reminders for this event.")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
             option
-                .name("Target Role")
-                .description("The user/role that is to be mentioned in reminders for this event.")
+                .name("target_role")
+                .description("The role that is to be mentioned in reminders for this event.")
                 .kind(CommandOptionType::Role)
                 .required(true)
         })
         .create_option(|option| {
             option    
-                .name("Reminder Expiration Date")
-                .description("The date and time for the reminder to expire. Use the format <year/month/day/hour/minute/second>.")
+                .name("reminder_expiration_date")
+                .description("Expiration date, in <YYYY/MM/DD/HH/MM/SS>.")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
             option
-                .name("Reminder Interval Type")
-                .description("The type of interval between reminder pings (year/month/day/hour/minute).")
+                .name("reminder_interval_type")
+                .description("The type of interval between reminder pings (day/hour/minute).")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
             option
-                .name("Reminder Interval Duration")
+                .name("reminder_interval_duration")
                 .description("The quantity of the interval type between reminder pings (number).")
-                .kind(CommandOptionType::Number)
+                .kind(CommandOptionType::Integer)
                 .required(true)
         })
 

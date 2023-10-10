@@ -20,7 +20,7 @@ pub struct ReminderError;
 /// Struct for storing reminder metadata.
 pub struct Reminder {
     _rem_id: u32,
-    rem_name: String,
+    pub rem_name: String,
     rem_msg: String,
     rem_author: String,
     rem_channel_id: ChannelId,

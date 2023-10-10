@@ -111,7 +111,8 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
                 "help" => commands::help::run(&command.data.options, &ctx),
-                // "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()), // currently non-functional
+                "cancel_reminder" => commands::cancel_reminder::run(&command.data.options, &ctx),
+                "set_reminder" => commands::set_reminder::run(&command.data.options, &ctx, command.clone()),
                 _ => "not implemented".to_string(),
             };
 
@@ -133,18 +134,16 @@ impl EventHandler for Handler {
         println!("Connected as {}", ready.user.name);
 
         // set up slash commands
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
-        let _commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            commands
-                .create_application_command(|command| commands::ping::register(command))
-                .create_application_command(|command| commands::help::register(command))
-                // .create_application_command(|command| commands::set_reminder::register(command)) // currently non-functional
-        }).await;
+        let guild_ids = ctx.cache.guilds();
+        for guild_id in guild_ids {
+            GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+                commands
+                    .create_application_command(|command| commands::ping::register(command))
+                    .create_application_command(|command| commands::help::register(command))
+                    .create_application_command(|command| commands::cancel_reminder::register(command))
+                    .create_application_command(|command| commands::set_reminder::register(command))
+            }).await.unwrap();
+        }
 
         // engage reminder handler
         let mut interval = Interval::platform_new(core::time::Duration::from_secs(60)); // polls all reminders every minute
