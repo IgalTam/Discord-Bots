@@ -6,3 +6,7 @@ pub mod cancel_reminder;
 pub mod list_reminders;
 pub mod update_reminder_name;
 pub mod update_reminder_msg;
+pub mod update_reminder_target;
+pub mod update_reminder_expiration;
+pub mod update_reminder_interval;
+pub mod update_reminder_channel;

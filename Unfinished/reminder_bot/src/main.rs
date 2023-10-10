@@ -116,6 +116,10 @@ impl EventHandler for Handler {
                 "list_reminders" => commands::list_reminders::run(&ctx),
                 "update_reminder_name" => commands::update_reminder_name::run(&command.data.options, &ctx),
                 "update_reminder_msg" => commands::update_reminder_msg::run(&command.data.options, &ctx),
+                "update_reminder_target" => commands::update_reminder_target::run(&command.data.options, &ctx),
+                "update_reminder_expiration" => commands::update_reminder_expiration::run(&command.data.options, &ctx),
+                "update_reminder_interval" => commands::update_reminder_interval::run(&command.data.options, &ctx),
+                "update_reminder_channel" => commands::update_reminder_channel::run(&command.data.options, &ctx),
                 _ => "not implemented".to_string(),
             };
 
@@ -136,7 +140,7 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.name);
 
-        // set up slash commands
+        // set up slash commands for all guilds this bot is a member of
         let guild_ids = ctx.cache.guilds();
         for guild_id in guild_ids {
             GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
@@ -148,6 +152,10 @@ impl EventHandler for Handler {
                     .create_application_command(|command| commands::list_reminders::register(command))
                     .create_application_command(|command| commands::update_reminder_name::register(command))
                     .create_application_command(|command| commands::update_reminder_msg::register(command))
+                    .create_application_command(|command| commands::update_reminder_target::register(command))
+                    .create_application_command(|command| commands::update_reminder_expiration::register(command))
+                    .create_application_command(|command| commands::update_reminder_interval::register(command))
+                    .create_application_command(|command| commands::update_reminder_channel::register(command))
             }).await.unwrap();
         }
 
