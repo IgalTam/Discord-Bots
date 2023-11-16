@@ -1,4 +1,5 @@
 //! Reminder Bot [final name TBD]
+//! 
 //! A Rust-based Discord bot that allows for the creation of reminders for events, each of which ping a
 //!  specific role on a configurable interval until the reminder expires.
 //! 
@@ -42,13 +43,12 @@ impl TypeMapKey for PrefixContainer {
     type Value = Arc<String>;
 }
 
-// #[derive(IndexMut)]
+/// Struct for storing and polling created Reminders.
 struct ReminderStorage {
     next_rem_id: u32,
     reminders: HashMap<u32, Reminder>,
 }
 
-/// Struct for storing and polling created Reminders.
 impl ReminderStorage {
 
     /// Creates a new ReminderStorage object.

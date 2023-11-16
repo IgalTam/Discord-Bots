@@ -1,4 +1,5 @@
 //! Reminder
+//! 
 //! Contains the struct definition and implementations for Reminder, as well as
 //! all commands associated with scheduling and modifying Reminders.
 

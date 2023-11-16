@@ -16,3 +16,4 @@ discord_bots_outgoing.zip
 Unfinished/reminder_bot/target/
 Unfinished/reminder_bot/Cargo.lock
 Unfinished/reminder_bot/.env
+Unfinished/reminder_bot/src/backup.rs
