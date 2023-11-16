@@ -43,4 +43,4 @@ As referred to earlier, each bot is programmed to import its access token from a
 3) Hunter Bot MkII: ```HUNTER2```
 4) Impersonator Bot: ```IMPERS```
 5) Vote Kicker: ```VOTEKICK```
-6) Reminder Bot: ```REMINDER_BOT_TOKEN``` (this bot does not use Discord.py -> see its individual README)
+6) Reminder Bot: ```REMINDER_BOT_TOKEN``` (this bot does not use a ```config.py``` -> see its individual README)
