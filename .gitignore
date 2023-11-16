@@ -14,3 +14,7 @@ testgmake*.txt
 discord_bots/
 dc_bots_env/
 discord_bots_outgoing.zip
+reminder_bot/target/
+reminder_bot/Cargo.lock
+reminder_bot/.env
+reminder_bot/src/backup.rs
