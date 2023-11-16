@@ -208,7 +208,7 @@ async fn main() {
     // the CWD. See `./.env.example` for an example on how to structure this.
     dotenv::dotenv().expect("Failed to load .env file");
 
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = env::var("REMINDER_BOT_TOKEN").expect("Expected a token in the environment");
     let prefix = env::var("PREFIX").expect("Expected a prefix in the environment");
 
     let http = Http::new(&token);

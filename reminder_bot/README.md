@@ -1,7 +1,7 @@
 # Reminder Bot
 
 ### Overview
-The Reminder Bot is a Rust-based Discord bot that is implemented with a low-level Rust-based Discord library. The bot allows for the scheduling of reminder instances for events, which will periodically appear as messages sent in a text channel pinging a specific role on the server. Upon startup, the bot installs and maintains an event handler that polls all active reminders every minute. Reminder metadata is fully configurable through available commands. Due to not being programmed using discord.py, the unique details of this bot can be found in the **Special Notes** section. Additionally, due to a technical issue with creating slash commands using the aformentioned Rust library, most of this bot's commands are prefix-based, not slash commands. Again, more on this in **Special Notes**.
+The Reminder Bot is a Rust-based Discord bot that is implemented with a low-level Rust-based Discord library. The bot allows for the scheduling of reminder instances for events, which will periodically appear as messages sent in a text channel pinging a specific role on the server. Upon startup, the bot installs and maintains an event handler that polls all active reminders every minute. Reminder metadata is fully configurable through available commands. Due to not being programmed using discord.py, the unique details of this bot can be found in the **Special Notes** section.
 
 ### Special Notes
 1) Reminder Bot is programmed in Rust v1.70, using the [Serenity Discord bot library](https://github.com/serenity-rs/serenity) among other Rust crates. Serenity's MSRV (minimum supported Rust version) should be enough to run this program, and all other dependencies will be downloaded during compilation. Downloading Rust itself can be found [here](https://www.rust-lang.org/tools/install).
@@ -9,14 +9,10 @@ The Reminder Bot is a Rust-based Discord bot that is implemented with a low-leve
 Alternatively, use ```cargo build``` to compile the code and dependencies.
 3) As an additional requirement for running this bot, create a ```.env``` file in this directory. This file should contain the following:<br />
 ```
-DISCORD_TOKEN="<your bot token>"
+REMINDER_BOT_TOKEN="<your bot token>"
 RUST_LOG=debug
 PREFIX="<command prefix of your choice>"
 ```
-4) Currently, Reminder Bot uses prefix commands, with a few utility slash commands. Use the slash command ```help``` within a guild to see the full list of
-prefix commands, or continue down this readme. A future implementation of slash commands will likely involve moving the bot to the higher-level 
-[Poise framework](https://github.com/serenity-rs/poise).
-
 
 ### Command List
 
@@ -24,7 +20,7 @@ prefix commands, or continue down this readme. A future implementation of slash 
 ```ping```: Pings the bot. Use to check if Reminder Bot is currently active and functioning.<br />
 ```help (slash command)```: Indicates the configured prefix, and directs towards the prefix ```help``` variant.<br />
 ```help (prefix command)```: Describes basic functionality and list of prefix commands.<br />
-**NOTE: ALL FURTHER COMMANDS ARE PREFIX COMMANDS**<br />
+**NOTE: ALL FURTHER COMMANDS ARE AVAILABLE AS BOTH PREFIX AND SLASH COMMANDS**<br />
 ```set_reminder "[event_name]" "[event_message]" "[target_role>]" [expiration_date (of the form <YYYY>/<MM>/<DD>/<HH>/<MM>/<SS>)] [interval_type (day, hour, or minute)] [interval_length (whole number)]```: Creates and schedules a new Reminder with name *event_name* that will mention members of *target_role* on the specified interval via a Discord message in the channel that this command was called in. This message will also contain *event_message*, *expiration_date*, *interval_type*, and *interval_length*. The expiration date should be in 24 hour form, and the posting interval cannot be less than 10 minutes.<br />
 ```list_reminders```: Lists all actively scheduled reminders and relevant metadata, including reminder IDs.<br />
 ```cancel_reminder [id]```: Deschedules the reminder with ID _id_, if able.<br />
