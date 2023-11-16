@@ -13,7 +13,7 @@ gmaker_tests/*.txt
 testgmake*.txt
 discord_bots/
 discord_bots_outgoing.zip
-Unfinished/reminder_bot/target/
-Unfinished/reminder_bot/Cargo.lock
-Unfinished/reminder_bot/.env
-Unfinished/reminder_bot/src/backup.rs
+reminder_bot/target/
+reminder_bot/Cargo.lock
+reminder_bot/.env
+reminder_bot/src/backup.rs
